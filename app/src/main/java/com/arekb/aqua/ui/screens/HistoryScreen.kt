@@ -22,7 +22,7 @@ import java.util.Locale
 
 @Composable
 fun HistoryScreen(history: List<DailyTotal>, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 112.dp)) {
         Spacer(Modifier.height(24.dp))
         Text("Your days", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Every sip, adding up.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -75,3 +75,5 @@ private fun formatDate(value: String): String = runCatching {
 private fun formatWeekday(value: String): String = runCatching {
     LocalDate.parse(value).format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
 }.getOrDefault("")
+
+

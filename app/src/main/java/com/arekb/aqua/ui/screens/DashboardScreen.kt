@@ -32,7 +32,7 @@ fun DashboardScreen(
     onOpenSettings: () -> Unit
 ) {
     Column(
-        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp),
+        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 112.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(18.dp))
@@ -156,4 +156,6 @@ fun CustomEntryDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
+
+
 

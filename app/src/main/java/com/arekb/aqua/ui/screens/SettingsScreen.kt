@@ -26,7 +26,7 @@ fun SettingsScreen(
     val presets = presetTexts.mapNotNull(String::toIntOrNull)
     val valid = goal != null && goal > 0 && presets.size == 4 && presets.all { it > 0 }
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 112.dp)) {
         Spacer(Modifier.height(24.dp))
         Text("Make it yours", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Set a goal that fits your day.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -83,4 +83,6 @@ private fun SettingsCard(title: String, subtitle: String, content: @Composable (
         }
     }
 }
+
+
 
