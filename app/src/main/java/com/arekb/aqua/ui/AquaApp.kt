@@ -61,14 +61,14 @@ import androidx.navigation3.ui.NavDisplay
 import com.arekb.aqua.ui.components.UserMessageEffect
 import com.arekb.aqua.ui.navigation.AquaDestination
 import com.arekb.aqua.ui.navigation.rememberAquaNavigationState
-import com.arekb.aqua.ui.screens.CustomEntryDialog
-import com.arekb.aqua.ui.screens.DashboardScreen
-import com.arekb.aqua.ui.screens.HistoryScreen
-import com.arekb.aqua.ui.screens.SettingsScreen
+import com.arekb.aqua.ui.screens.today.components.CustomEntryDialog
+import com.arekb.aqua.ui.screens.today.TodayScreen
+import com.arekb.aqua.ui.screens.history.HistoryScreen
+import com.arekb.aqua.ui.screens.settings.SettingsScreen
 import com.arekb.aqua.ui.theme.AquaTheme
-import com.arekb.aqua.ui.viewmodel.DashboardViewModel
-import com.arekb.aqua.ui.viewmodel.HistoryViewModel
-import com.arekb.aqua.ui.viewmodel.SettingsViewModel
+import com.arekb.aqua.ui.screens.today.TodayViewModel
+import com.arekb.aqua.ui.screens.history.HistoryViewModel
+import com.arekb.aqua.ui.screens.settings.SettingsViewModel
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -85,7 +85,7 @@ fun AquaRoot() {
         val entryProvider = entryProvider<NavKey> {
             entry<AquaDestination> { destination ->
                 when (destination) {
-                    AquaDestination.TODAY -> DashboardRoute(
+                    AquaDestination.TODAY -> TodayRoute(
                         modifier = Modifier,
                         snackbarHostState = snackbarHostState,
                         onOpenSettings = dropUnlessResumed {
@@ -194,12 +194,12 @@ private val AquaDestination.label: String
     }
 
 @Composable
-private fun DashboardRoute(
+private fun TodayRoute(
     modifier: Modifier,
     snackbarHostState: SnackbarHostState,
     onOpenSettings: () -> Unit
 ) {
-    val viewModel: DashboardViewModel = hiltViewModel()
+    val viewModel: TodayViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showCustomEntry by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -214,7 +214,7 @@ private fun DashboardRoute(
     LaunchedEffect(viewModel) { viewModel.refreshDate() }
     UserMessageEffect(state.message, snackbarHostState, viewModel::undo, viewModel::messageShown)
 
-    DashboardScreen(
+    TodayScreen(
         state = state,
         modifier = modifier,
         onAdd = viewModel::logWater,

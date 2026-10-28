@@ -9,7 +9,7 @@ data class WaterIntake(
 
 data class HydrationSettings(
     val dailyGoalMl: Int = 2_000,
-    val presetsMl: List<Int> = listOf(200, 350, 500, 750)
+    val presetsMl: List<Int> = listOf(200, 350, 500)
 )
 
 data class DailyTotal(

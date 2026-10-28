@@ -1,4 +1,4 @@
-package com.arekb.aqua.ui.viewmodel
+package com.arekb.aqua.ui.screens.today
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class DashboardUiState(
+data class TodayUiState(
     val settings: HydrationSettings = HydrationSettings(),
     val today: String = LocalDate.now().toString(),
     val todayTotalMl: Int = 0,
@@ -31,7 +31,7 @@ data class DashboardUiState(
 )
 
 @HiltViewModel
-class DashboardViewModel @Inject constructor(
+class TodayViewModel @Inject constructor(
     private val repository: HydrationRepository,
     private val addWater: AddWaterUseCase
 ) : ViewModel() {
@@ -46,13 +46,13 @@ class DashboardViewModel @Inject constructor(
         todayKey,
         messageState
     ) { settings, entries, today, message ->
-        DashboardUiState(
+        TodayUiState(
             settings = settings ?: HydrationSettings(),
             today = today,
             todayTotalMl = entries.sumOf(WaterIntake::amountMl),
             message = message
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState())
 
     init {
         viewModelScope.launch {

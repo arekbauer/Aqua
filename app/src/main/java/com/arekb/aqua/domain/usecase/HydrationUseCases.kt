@@ -22,7 +22,7 @@ class AddWaterUseCase(
 class SaveHydrationSettingsUseCase(private val repository: HydrationRepository) {
     suspend operator fun invoke(settings: HydrationSettings) {
         require(settings.dailyGoalMl > 0)
-        require(settings.presetsMl.size == 4 && settings.presetsMl.all { it > 0 })
+        require(settings.presetsMl.size == 3 && settings.presetsMl.all { it > 0 })
         repository.saveSettings(settings)
     }
 }

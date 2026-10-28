@@ -1,4 +1,4 @@
-package com.arekb.aqua.ui.screens
+package com.arekb.aqua.ui.screens.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.arekb.aqua.domain.model.HydrationSettings
+import com.arekb.aqua.ui.theme.AquaTheme
 
 @Composable
 fun SettingsScreen(
@@ -24,7 +26,7 @@ fun SettingsScreen(
     var presetTexts by remember(settings.presetsMl) { mutableStateOf(settings.presetsMl.map { it.toString() }) }
     val goal = goalText.toIntOrNull()
     val presets = presetTexts.mapNotNull(String::toIntOrNull)
-    val valid = goal != null && goal > 0 && presets.size == 4 && presets.all { it > 0 }
+    val valid = goal != null && goal > 0 && presets.size == 3 && presets.all { it > 0 }
 
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 112.dp)) {
         Spacer(Modifier.height(24.dp))
@@ -40,7 +42,7 @@ fun SettingsScreen(
             )
         }
         Spacer(Modifier.height(14.dp))
-        SettingsCard("Quick add", "Choose four amounts for your buttons") {
+        SettingsCard("Quick add", "Choose three amounts for your buttons") {
             presetTexts.forEachIndexed { index, value ->
                 OutlinedTextField(
                     value = value,
@@ -65,6 +67,32 @@ fun SettingsScreen(
             }
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Preview(name = "Settings · light", showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    AquaTheme(darkTheme = false) {
+        SettingsScreen(
+            settings = HydrationSettings(),
+            modifier = Modifier,
+            onSave = {},
+            onReset = {}
+        )
+    }
+}
+
+@Preview(name = "Settings · dark", showBackground = true)
+@Composable
+private fun SettingsScreenDarkPreview() {
+    AquaTheme(darkTheme = true) {
+        SettingsScreen(
+            settings = HydrationSettings(dailyGoalMl = 2_500, presetsMl = listOf(250, 400, 600)),
+            modifier = Modifier,
+            onSave = {},
+            onReset = {}
+        )
     }
 }
 

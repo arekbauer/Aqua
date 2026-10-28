@@ -1,4 +1,4 @@
-package com.arekb.aqua.ui.viewmodel
+package com.arekb.aqua.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package com.arekb.aqua.ui.screens
+package com.arekb.aqua.ui.screens.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arekb.aqua.domain.model.DailyTotal
+import com.arekb.aqua.ui.theme.AquaTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -44,6 +46,29 @@ fun HistoryScreen(history: List<DailyTotal>, modifier: Modifier = Modifier) {
             }
         }
         Spacer(Modifier.height(20.dp))
+    }
+}
+
+@Preview(name = "History · populated", showBackground = true)
+@Composable
+private fun HistoryScreenPreview() {
+    val today = LocalDate.now()
+    val history = listOf(
+        DailyTotal(localDate = today.toString(), totalMl = 1_450),
+        DailyTotal(localDate = today.minusDays(1).toString(), totalMl = 2_100),
+        DailyTotal(localDate = today.minusDays(2).toString(), totalMl = 1_800),
+        DailyTotal(localDate = today.minusDays(3).toString(), totalMl = 2_400)
+    )
+    AquaTheme(darkTheme = false) {
+        HistoryScreen(history = history)
+    }
+}
+
+@Preview(name = "History · empty", showBackground = true)
+@Composable
+private fun HistoryScreenEmptyPreview() {
+    AquaTheme(darkTheme = false) {
+        HistoryScreen(history = emptyList())
     }
 }
 

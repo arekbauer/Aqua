@@ -38,7 +38,7 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
 
     private fun SettingsEntity.toDomain() = HydrationSettings(
         dailyGoalMl = dailyGoalMl,
-        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl, presetFourMl)
+        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl)
     )
 
     private fun HydrationSettings.toEntity() = SettingsEntity(
@@ -46,7 +46,8 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         presetOneMl = presetsMl[0],
         presetTwoMl = presetsMl[1],
         presetThreeMl = presetsMl[2],
-        presetFourMl = presetsMl[3]
+        // Keep the legacy Room column populated so the database schema stays compatible.
+        presetFourMl = 750
     )
 
     private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate)
