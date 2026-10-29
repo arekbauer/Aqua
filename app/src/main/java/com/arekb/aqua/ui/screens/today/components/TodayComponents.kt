@@ -178,7 +178,6 @@ fun CookieReservoirProgressGauge(
         animationSpec = tween(900), label = "cookie reservoir hydration progress"
     )
     val colors = MaterialTheme.colorScheme
-    val remainingMl = (goalMl - currentMl).coerceAtLeast(0)
     var previousMl by remember { mutableIntStateOf(currentMl) }
     var shapeIndex by remember { mutableIntStateOf(0) }
     var shapeStartIndex by remember { mutableIntStateOf(0) }
@@ -214,7 +213,7 @@ fun CookieReservoirProgressGauge(
     val reservoirShape = ReservoirMorphShape(shapeMorph, shapeMorphProgress.value)
 
     Box(
-        modifier = Modifier.graphicsLayer {
+        modifier = modifier.graphicsLayer {
             scaleX = reservoirBounce.value
             scaleY = reservoirBounce.value
         },
@@ -226,9 +225,7 @@ fun CookieReservoirProgressGauge(
             shape = reservoirShape
         )
         CookieReservoirReadout(
-            currentMl = currentMl,
-            remainingMl = remainingMl,
-            goalMl = goalMl
+            currentMl = currentMl
         )
     }
 }
@@ -291,14 +288,20 @@ private fun CookieReservoirLiquid(
 }
 
 @Composable
-private fun CookieReservoirReadout(currentMl: Int, remainingMl: Int, goalMl: Int) {
+private fun CookieReservoirReadout(
+    currentMl: Int
+) {
     val colors = MaterialTheme.colorScheme
     Column(Modifier.padding(horizontal = 42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(currentMl.toString(), style = MaterialTheme.typography.displayMedium, color = colors.onSurface, fontWeight = FontWeight.Bold)
-        Text("ml drank", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
-        Spacer(Modifier.height(8.dp))
-        Text("$remainingMl ml left", style = MaterialTheme.typography.bodyMedium, color = colors.primary, fontWeight = FontWeight.Bold)
-        Text("of $goalMl ml goal", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+        Text(
+            currentMl.toString(),
+            style = MaterialTheme.typography.displayLarge,
+            color = colors.onSurface,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false
+        )
+        Text("ml today", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
     }
 }
 
