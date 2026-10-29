@@ -90,8 +90,8 @@ private fun HistoryRow(day: DailyTotal, isToday: Boolean) {
 }
 
 internal fun todayHeading(value: String): String = runCatching {
-    LocalDate.parse(value).format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault()))
-}.getOrDefault("A new day to hydrate")
+    LocalDate.parse(value).format(DateTimeFormatter.ofPattern("EEEE, dd MMM", Locale.getDefault()))
+}.getOrDefault("Today")
 
 private fun formatDate(value: String): String = runCatching {
     LocalDate.parse(value).format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()))

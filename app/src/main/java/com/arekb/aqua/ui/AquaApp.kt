@@ -218,8 +218,7 @@ private fun TodayRoute(
         state = state,
         modifier = modifier,
         onAdd = viewModel::logWater,
-        onCustom = { showCustomEntry = true },
-        onOpenSettings = onOpenSettings
+        onCustom = { showCustomEntry = true }
     )
 
     if (showCustomEntry) {

@@ -1,6 +1,8 @@
 package com.arekb.aqua.ui.screens.today.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -28,19 +30,29 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.toPath
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -52,7 +64,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import com.arekb.aqua.ui.theme.AquaTheme
+import androidx.graphics.shapes.Morph
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -164,9 +179,45 @@ fun CookieReservoirProgressGauge(
     )
     val colors = MaterialTheme.colorScheme
     val remainingMl = (goalMl - currentMl).coerceAtLeast(0)
-    val reservoirShape = MaterialShapes.Cookie7Sided.toShape()
+    var previousMl by remember { mutableIntStateOf(currentMl) }
+    var shapeIndex by remember { mutableIntStateOf(0) }
+    var shapeStartIndex by remember { mutableIntStateOf(0) }
+    val shapeMorphProgress = remember { Animatable(1f) }
+    val reservoirBounce = remember { Animatable(1f) }
+
+    LaunchedEffect(currentMl) {
+        if (previousMl != currentMl) {
+            previousMl = currentMl
+            shapeStartIndex = shapeIndex
+            shapeIndex = (shapeIndex + 1) % RESERVOIR_SHAPE_STAGES.size
+            shapeMorphProgress.snapTo(0f)
+            reservoirBounce.snapTo(0.94f)
+            launch {
+                reservoirBounce.animateTo(
+                    targetValue = 1.10f,
+                    animationSpec = spring(dampingRatio = 0.95f, stiffness = 700f)
+                )
+                reservoirBounce.animateTo(
+                    targetValue = 1f,
+                    animationSpec = spring(dampingRatio = 0.58f, stiffness = 500f)
+                )
+            }
+            shapeMorphProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 900)
+            )
+        }
+    }
+    val shapeMorph = remember(shapeStartIndex, shapeIndex) {
+        Morph(RESERVOIR_SHAPE_STAGES[shapeStartIndex], RESERVOIR_SHAPE_STAGES[shapeIndex])
+    }
+    val reservoirShape = ReservoirMorphShape(shapeMorph, shapeMorphProgress.value)
 
     Box(
+        modifier = Modifier.graphicsLayer {
+            scaleX = reservoirBounce.value
+            scaleY = reservoirBounce.value
+        },
         contentAlignment = Alignment.Center
     ) {
         CookieReservoirLiquid(
@@ -182,13 +233,48 @@ fun CookieReservoirProgressGauge(
     }
 }
 
+/**
+ * Edit this list to choose the silhouettes and cycle order. Each change to currentMl advances
+ * to the next shape, regardless of the daily goal or the amount added.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val RESERVOIR_SHAPE_STAGES = listOf(
+    //MaterialShapes.Clover4Leaf,
+    MaterialShapes.Sunny,
+    MaterialShapes.Cookie7Sided,
+    MaterialShapes.SoftBurst,
+    MaterialShapes.Flower,
+)
+
+// Adjust this value to resize the reservoir outline and its liquid together.
+private val RESERVOIR_SIZE = 256.dp
+
+/** A Material 3 polygon morph rendered as a Compose clip shape. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private class ReservoirMorphShape(
+    private val morph: Morph,
+    private val progress: Float
+) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val path = morph.toPath(progress)
+        val scale = Matrix().apply { scale(x = size.width, y = size.height) }
+        path.transform(scale)
+        path.translate(size.center - path.getBounds().center)
+        return Outline.Generic(path)
+    }
+}
+
 @Composable
 private fun CookieReservoirLiquid(
     fraction: Float,
     color: androidx.compose.ui.graphics.Color,
-    shape: androidx.compose.ui.graphics.Shape
+    shape: Shape
 ) {
-    Box(Modifier.size(220.dp).clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+    Box(Modifier.size(RESERVOIR_SIZE).clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
         Canvas(Modifier.fillMaxSize()) {
             val fillY = size.height * (1f - fraction)
             val wave = Path().apply {
