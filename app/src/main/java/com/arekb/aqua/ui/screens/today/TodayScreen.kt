@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,7 +75,7 @@ fun TodayScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
@@ -162,12 +163,13 @@ fun TodayScreen(
     editingEntry?.let { entry ->
         AlertDialog(
             onDismissRequest = { editingEntry = null },
-            title = { Text("Edit water log") },
+            title = { Text("Edit water log", style = MaterialTheme.typography.titleLargeEmphasized) },
             text = {
                 OutlinedTextField(
                     value = editAmount,
                     onValueChange = { editAmount = it.filter(Char::isDigit).take(5) },
                     label = { Text("Amount in ml") },
+                    shape = RoundedCornerShape(100.dp),
                     suffix = { Text("ml") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
