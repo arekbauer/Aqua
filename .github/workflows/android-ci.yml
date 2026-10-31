@@ -31,13 +31,19 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
       - name: Run unit tests, lint, debug build, and coverage report
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug jacocoTestReport
-      - name: Upload debug APK and quality reports
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: aqua-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+      - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: android-quality-reports
           path: |
-            app/build/outputs/apk/debug/*.apk
             app/build/reports/tests/testDebugUnitTest/
             app/build/reports/lint-results-debug.html
             app/build/reports/jacoco/jacocoTestReport/
