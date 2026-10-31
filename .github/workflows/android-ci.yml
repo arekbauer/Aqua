@@ -28,7 +28,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Run unit tests, lint, debug build, and coverage report
-        run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug jacocoTestReport
+        run: bash ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug jacocoTestReport
       - name: Upload debug APK and quality reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
           api-level: 35
           arch: x86_64
           profile: pixel_2
-          script: ./gradlew --no-daemon connectedDebugAndroidTest
+          script: bash ./gradlew --no-daemon connectedDebugAndroidTest
       - name: Upload instrumented test report
         if: always()
         uses: actions/upload-artifact@v4
