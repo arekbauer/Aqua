@@ -1,30 +1,19 @@
 package com.arekb.aqua.ui.screens.today
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WaterDrop
-import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,11 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.model.HydrationSettings
+import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.history.todayHeading
 import com.arekb.aqua.ui.screens.today.components.CookieReservoirProgressGauge
@@ -86,63 +72,68 @@ fun TodayScreen(
             )
         },
     ) { innerPadding ->
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(16.dp))
-
-            CookieReservoirProgressGauge(state.todayTotalMl, state.settings.dailyGoalMl)
-            Spacer(Modifier.height(12.dp))
-            DailyGoalSummary(
-                currentMl = state.todayTotalMl,
-                goalMl = state.settings.dailyGoalMl,
-                style = DailyGoalSummaryStyle.CENTERED_TEXT
-            )
-            Spacer(Modifier.height(28.dp))
-
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Quick add",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+            item {
+                CookieReservoirProgressGauge(state.todayTotalMl, state.settings.dailyGoalMl)
+                Spacer(Modifier.height(12.dp))
+                DailyGoalSummary(
+                    currentMl = state.todayTotalMl,
+                    goalMl = state.settings.dailyGoalMl,
+                    style = DailyGoalSummaryStyle.CENTERED_TEXT
                 )
-                Text(
-                    text = "Choose an amount",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(Modifier.height(28.dp))
+            }
+
+            item {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Quick add",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Choose an amount",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                QuickAddButtonGroup(
+                    presetsMl = state.settings.presetsMl,
+                    modifier = Modifier.fillMaxWidth(),
+                    onAdd = onAdd
                 )
+                Spacer(Modifier.height(12.dp))
+                FilledTonalButton(
+                    onClick = { showDrinkPicker = true },
+                    modifier = Modifier.fillMaxWidth().height(64.dp)
+                ) {
+                    Icon(Icons.Outlined.WaterDrop, contentDescription = null)
+                    Text("Add a drink", modifier = Modifier.padding(start = 8.dp))
+                }
+                Spacer(Modifier.height(32.dp))
             }
 
-            Spacer(Modifier.height(12.dp))
-            QuickAddButtonGroup(
-                presetsMl = state.settings.presetsMl,
-                modifier = Modifier.fillMaxWidth(),
-                onAdd = onAdd
-            )
+            item {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Today’s logs", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(Modifier.weight(1f))
+                    Text("${state.entries.size} entries", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
 
-            Spacer(Modifier.height(12.dp))
-            FilledTonalButton(
-                onClick = { showDrinkPicker = true },
-                modifier = Modifier.fillMaxWidth().height(64.dp)
-            ) {
-                Icon(Icons.Outlined.WaterDrop, contentDescription = null)
-                Text("Add a drink", modifier = Modifier.padding(start = 8.dp))
-            }
-            Spacer(Modifier.height(28.dp))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Today’s logs", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
-                Spacer(Modifier.weight(1f))
-                Text("${state.entries.size} entries", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Spacer(Modifier.height(8.dp))
             if (state.entries.isEmpty()) {
-                Text("Your drinks will appear here.", Modifier.fillMaxWidth().padding(vertical = 16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                item {
+                    Text("Your drinks will appear here.", Modifier.fillMaxWidth().padding(vertical = 16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             } else {
-                state.entries.forEach { entry ->
+                items(items = state.entries, key = WaterIntake::id) { entry ->
                     IntakeLogRow(
                         entry = entry,
                         onEdit = { editingEntry = entry; editAmount = entry.amountMl.toString() },
@@ -150,7 +141,6 @@ fun TodayScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(20.dp))
         }
     }
 
