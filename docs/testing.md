@@ -18,7 +18,7 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
   - `updatesAndDeletesChangeTheDailyTotal`: verifies updating an entry changes the stored daily total and deleting it removes the total.
 - JaCoCo report for local JVM tests.
 
-The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings and History. The emulator suite tests the Today screen component directly; it does not yet run a complete Hilt-backed app journey.
+The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings and History. The instrumented tests exercise the Today screen component and Room DAO directly; they do not yet run a complete Hilt-backed app journey.
 
 ## Run locally
 
@@ -36,6 +36,6 @@ The emulator command needs a running Android emulator or connected device. JaCoC
 
 ## CI
 
-`.github/workflows/android-ci.yml` runs on pull requests and pushes to any branch. It runs JVM tests, Android lint, a debug build, and a coverage report. A separate job boots an API 35 emulator and runs Compose behavior and Room database tests. The debug APK, test reports, and lint report are uploaded as workflow artifacts.
+`.github/workflows/android-ci.yml` runs on pull requests and pushes to any branch. It runs JVM tests, Android lint, a debug build, and a coverage report. The debug APK and quality reports are uploaded as workflow artifacts. Compose behavior and Room database tests are intentionally excluded from CI and can be run locally with `connectedDebugAndroidTest` on an emulator or connected device.
 
 Visual screenshot references are not configured yet; there is no baseline directory.
