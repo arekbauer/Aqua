@@ -419,13 +419,18 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
 }
 
 @Composable
-fun IntakeLogRow(entry: WaterIntake, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun IntakeLogRow(
+    entry: WaterIntake,
+    modifier: Modifier = Modifier,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     val time = remember(entry.timestampMillis) {
         Instant.ofEpochMilli(entry.timestampMillis).atZone(ZoneId.systemDefault())
             .format(DateTimeFormatter.ofPattern("h:mm a"))
     }
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {

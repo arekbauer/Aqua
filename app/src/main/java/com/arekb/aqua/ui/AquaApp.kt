@@ -86,10 +86,7 @@ fun AquaRoot() {
                 when (destination) {
                     AquaDestination.TODAY -> TodayRoute(
                         modifier = Modifier,
-                        snackbarHostState = snackbarHostState,
-                        onOpenSettings = dropUnlessResumed {
-                            navigationState.navigateToTopLevel(AquaDestination.SETTINGS)
-                        }
+                        snackbarHostState = snackbarHostState
                     )
                     AquaDestination.HISTORY -> HistoryRoute(Modifier)
                     AquaDestination.SETTINGS -> SettingsRoute(Modifier, snackbarHostState)
@@ -195,8 +192,7 @@ private val AquaDestination.label: String
 @Composable
 private fun TodayRoute(
     modifier: Modifier,
-    snackbarHostState: SnackbarHostState,
-    onOpenSettings: () -> Unit
+    snackbarHostState: SnackbarHostState
 ) {
     val viewModel: TodayViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()

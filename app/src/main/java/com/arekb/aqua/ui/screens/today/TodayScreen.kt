@@ -136,6 +136,7 @@ fun TodayScreen(
                 items(items = state.entries, key = WaterIntake::id) { entry ->
                     IntakeLogRow(
                         entry = entry,
+                        modifier = Modifier.animateItem(),
                         onEdit = { editingEntry = entry; editAmount = entry.amountMl.toString() },
                         onDelete = { onDelete(entry) }
                     )
