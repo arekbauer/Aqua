@@ -51,6 +51,7 @@ fun TodayScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var showDrinkPicker by remember { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
