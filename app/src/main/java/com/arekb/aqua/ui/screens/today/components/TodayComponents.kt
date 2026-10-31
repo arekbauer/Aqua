@@ -33,8 +33,13 @@ import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.LocalBar
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +85,10 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.arekb.aqua.ui.theme.AquaTheme
 import androidx.graphics.shapes.Morph
+import com.arekb.aqua.domain.model.WaterIntake
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -178,7 +187,6 @@ fun MinimalVerticalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier
 }
 
 /** Material cookie-shaped reservoir framed by a circular progress ring. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CookieReservoirProgressGauge(
     currentMl: Int,
@@ -405,6 +413,33 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
             )
             OutlinedButton(onClick = { customMl?.let(onAdd) }, enabled = customMl != null, modifier = Modifier.height(56.dp)) {
                 Text("Add")
+            }
+        }
+    }
+}
+
+@Composable
+fun IntakeLogRow(entry: WaterIntake, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val time = remember(entry.timestampMillis) {
+        Instant.ofEpochMilli(entry.timestampMillis).atZone(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern("h:mm a"))
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("${entry.amountMl} ml", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Text("$time", modifier = Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Outlined.Edit, contentDescription = "Edit ${entry.amountMl} ml log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Outlined.DeleteOutline, contentDescription = "Delete ${entry.amountMl} ml log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

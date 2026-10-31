@@ -34,6 +34,9 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
 
     override suspend fun undoIntake(intake: WaterIntake) = dao.deleteEntry(intake.id)
 
+    override suspend fun updateIntakeAmount(intakeId: Long, amountMl: Int) =
+        dao.updateEntryAmount(intakeId, amountMl)
+
     override suspend fun clearDate(localDate: String) = dao.clearEntriesForDate(localDate)
 
     private fun SettingsEntity.toDomain() = HydrationSettings(

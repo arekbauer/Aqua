@@ -47,6 +47,9 @@ interface AquaDao {
     @Query("DELETE FROM intake_entries WHERE id = :id")
     suspend fun deleteEntry(id: Long)
 
+    @Query("UPDATE intake_entries SET amountMl = :amountMl WHERE id = :id")
+    suspend fun updateEntryAmount(id: Long, amountMl: Int)
+
     @Query("DELETE FROM intake_entries WHERE localDate = :date")
     suspend fun clearEntriesForDate(date: String)
 

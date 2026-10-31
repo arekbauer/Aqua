@@ -11,6 +11,7 @@ interface HydrationRepository {
     fun observeDailyTotals(): Flow<List<DailyTotal>>
     suspend fun saveSettings(settings: HydrationSettings)
     suspend fun addIntake(amountMl: Int, timestampMillis: Long, localDate: String): WaterIntake
+    suspend fun updateIntakeAmount(intakeId: Long, amountMl: Int)
     suspend fun undoIntake(intake: WaterIntake)
     suspend fun clearDate(localDate: String)
 }

@@ -27,6 +27,7 @@ data class TodayUiState(
     val settings: HydrationSettings = HydrationSettings(),
     val today: String = LocalDate.now().toString(),
     val todayTotalMl: Int = 0,
+    val entries: List<WaterIntake> = emptyList(),
     val message: UserMessage? = null
 )
 
@@ -50,6 +51,7 @@ class TodayViewModel @Inject constructor(
             settings = settings ?: HydrationSettings(),
             today = today,
             todayTotalMl = entries.sumOf(WaterIntake::amountMl),
+            entries = entries,
             message = message
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState())
@@ -86,6 +88,17 @@ class TodayViewModel @Inject constructor(
 
     fun undo(intake: WaterIntake) {
         performWrite("undo that entry", "Entry undone") { repository.undoIntake(intake) }
+    }
+
+    fun delete(intake: WaterIntake) {
+        performWrite("delete that entry", "Entry deleted") { repository.undoIntake(intake) }
+    }
+
+    fun updateAmount(intake: WaterIntake, amountMl: Int) {
+        if (amountMl <= 0) return
+        performWrite("update that entry", "Entry updated") {
+            repository.updateIntakeAmount(intake.id, amountMl)
+        }
     }
 
     fun messageShown(id: Long) {

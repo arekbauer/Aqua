@@ -215,7 +215,9 @@ private fun TodayRoute(
     TodayScreen(
         state = state,
         modifier = modifier,
-        onAdd = viewModel::logWater
+        onAdd = viewModel::logWater,
+        onEdit = viewModel::updateAmount,
+        onDelete = viewModel::delete
     )
 }
 
