@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import com.arekb.aqua.R
 import com.arekb.aqua.ui.theme.AquaTheme
 
@@ -121,12 +122,13 @@ fun QuickAddButtonGroup(
                         ) {
                             Icon(
                                 painter = painterResource(buttonIcon),
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = contentColor.copy(alpha = 0.75f),
                             )
-                            Spacer(Modifier.height(5.dp))
+                            Spacer(Modifier.height(4.dp))
                             Text(
                                 text = "$amountMl ml",
-                                style = MaterialTheme.typography.labelLarge,
+                                style = MaterialTheme.typography.labelLargeEmphasized,
                                 maxLines = 1,
                                 softWrap = false,
                                 overflow = TextOverflow.Ellipsis

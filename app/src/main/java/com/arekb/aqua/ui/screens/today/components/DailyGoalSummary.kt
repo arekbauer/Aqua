@@ -34,7 +34,7 @@ fun DailyGoalSummary(
 ) {
     val colors = MaterialTheme.colorScheme
     val remainingMl = (goalMl - currentMl).coerceAtLeast(0)
-    val goalReached = goalMl > 0 && currentMl >= goalMl
+    val goalReached = goalMl in 1..currentMl
     val remainingLabel = if (goalReached) "Daily goal reached" else "$remainingMl ml to go"
 
     when (style) {

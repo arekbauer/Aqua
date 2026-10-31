@@ -10,17 +10,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -32,6 +38,7 @@ import com.arekb.aqua.ui.screens.history.todayHeading
 import com.arekb.aqua.ui.screens.today.components.CookieReservoirProgressGauge
 import com.arekb.aqua.ui.screens.today.components.DailyGoalSummary
 import com.arekb.aqua.ui.screens.today.components.DailyGoalSummaryStyle
+import com.arekb.aqua.ui.screens.today.components.DrinkPickerBottomSheet
 import com.arekb.aqua.ui.screens.today.components.QuickAddButtonGroup
 import com.arekb.aqua.ui.theme.AquaTheme
 
@@ -40,11 +47,11 @@ import com.arekb.aqua.ui.theme.AquaTheme
 fun TodayScreen(
     state: TodayUiState,
     modifier: Modifier = Modifier,
-    onAdd: (Int) -> Unit,
-    onCustom: () -> Unit
+    onAdd: (Int) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
+    var showDrinkPicker by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -94,13 +101,27 @@ fun TodayScreen(
 
             Spacer(Modifier.height(12.dp))
             FilledTonalButton(
-                onClick = onCustom,
+                onClick = { showDrinkPicker = true },
                 modifier = Modifier.fillMaxWidth().height(64.dp)
             ) {
                 Icon(Icons.Outlined.WaterDrop, contentDescription = null)
-                Text("Add custom amount", modifier = Modifier.padding(start = 8.dp))
+                Text("Add a drink", modifier = Modifier.padding(start = 8.dp))
             }
             Spacer(Modifier.height(20.dp))
+        }
+    }
+
+    if (showDrinkPicker) {
+        ModalBottomSheet(
+            onDismissRequest = { showDrinkPicker = false },
+            sheetState = sheetState
+        ) {
+            DrinkPickerBottomSheet(
+                onAdd = { amount ->
+                    showDrinkPicker = false
+                    onAdd(amount)
+                },
+            )
         }
     }
 }
@@ -115,8 +136,7 @@ private fun TodayScreenPreview() {
                 today = "2026-10-27",
                 todayTotalMl = 1_250
             ),
-            onAdd = {},
-            onCustom = {}
+            onAdd = {}
         )
     }
 }
@@ -131,8 +151,7 @@ private fun TodayScreenDarkPreview() {
                 today = "2026-10-27",
                 todayTotalMl = 2_250
             ),
-            onAdd = {},
-            onCustom = {}
+            onAdd = {}
         )
     }
 }

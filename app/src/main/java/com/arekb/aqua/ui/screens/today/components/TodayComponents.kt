@@ -18,18 +18,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.LocalBar
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.toPath
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -58,11 +70,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -295,7 +307,7 @@ private fun CookieReservoirReadout(
     Column(Modifier.padding(horizontal = 42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             currentMl.toString(),
-            style = MaterialTheme.typography.displayLarge,
+            style = MaterialTheme.typography.displayLargeEmphasized,
             color = colors.onSurface,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -336,30 +348,71 @@ private fun MinimalVerticalProgressGaugePreview() {
 }
 
 @Composable
-fun CustomEntryDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
-    var amount by rememberSaveable { mutableStateOf("") }
-    val parsed = amount.toIntOrNull()
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Custom amount") },
-        text = {
-            Column {
-                Text("How much water did you drink?")
-                Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it.filter(Char::isDigit).take(5) },
-                    modifier = Modifier.fillMaxWidth(), label = { Text("Amount in ml") }, suffix = { Text("ml") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
-                )
-                if (amount.isNotEmpty() && (parsed == null || parsed <= 0)) {
-                    Text("Enter an amount greater than 0 ml", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = { TextButton(enabled = parsed != null && parsed > 0, onClick = { parsed?.let(onAdd) }) { Text("Add water") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
+    var customAmount by rememberSaveable { mutableStateOf("") }
+    val customMl = customAmount.toIntOrNull()?.takeIf { it > 0 }
+    val servings = listOf(
+        ServingOption("Juice Box", 200, Icons.Filled.LocalDrink),
+        ServingOption("Glass", 250, Icons.Filled.WaterDrop),
+        ServingOption("Can", 330, Icons.Filled.LocalDrink),
+        ServingOption("Coffee Cup ", 350, Icons.Filled.Coffee),
+        ServingOption("Bottle", 500, Icons.Filled.WaterDrop),
+        ServingOption("Pint", 568, Icons.Filled.LocalBar)
     )
+
+    Column(
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Add a drink", style = MaterialTheme.typography.titleLargeEmphasized)
+            Text("Choose a typical serving size", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        servings.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { serving ->
+                    FilledTonalButton(
+                        onClick = { onAdd(serving.amountMl) },
+                        modifier = Modifier.weight(1f).aspectRatio(1.25f),
+                        shape = RoundedCornerShape(30.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            // Icon(serving.icon, contentDescription = null, modifier = Modifier.sizeIn(maxWidth = 22.dp, maxHeight = 22.dp))
+                            Text(serving.label,
+                                style = MaterialTheme.typography.labelLarge,
+                                textAlign = TextAlign.Center,
+                                maxLines = 3,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                            )
+                            Text("${serving.amountMl} ml", style = MaterialTheme.typography.labelLargeEmphasized)
+                        }
+                    }
+                }
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+        Text("Custom amount", style = MaterialTheme.typography.titleLargeEmphasized)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = customAmount,
+                onValueChange = { customAmount = it.filter(Char::isDigit).take(5) },
+                modifier = Modifier.weight(1f),
+                label = { Text("Amount in ml") },
+                shape = RoundedCornerShape(100.dp),
+                suffix = { Text("ml") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
+            )
+            OutlinedButton(onClick = { customMl?.let(onAdd) }, enabled = customMl != null, modifier = Modifier.height(56.dp)) {
+                Text("Add")
+            }
+        }
+    }
 }
+
+private data class ServingOption(
+    val label: String,
+    val amountMl: Int,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
 
