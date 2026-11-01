@@ -136,9 +136,8 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
     )
 
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = MaterialTheme.typography.labelSmall.copy(
-        color = colors.onSurfaceVariant,
-        fontWeight = FontWeight.Medium
+    val labelStyle = MaterialTheme.typography.labelMedium.copy(
+        color = colors.onSurface.copy(alpha = 0.75f)
     )
 
     Column(
@@ -159,8 +158,8 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
             val bottomInset = 12.dp.toPx()
             val chartHeight = size.height - topInset - bottomInset
             val slotWidth = size.width / days.size
-            val barWidth = (slotWidth * 0.45f).coerceAtMost(28.dp.toPx())
-            val cornerRadius = CornerRadius(barWidth / 2f)
+            val barWidth = (slotWidth * 0.66f).coerceAtMost(44.dp.toPx())
+            val cornerRadius = CornerRadius(12.dp.toPx())
             
             val goalPath = Path()
             var hasGoal = false
@@ -200,7 +199,7 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
                 
                 val targetHeight = chartHeight * (day.totalMl / maximum)
                 val animatedHeight = targetHeight * animationProgress.value
-                val finalHeight = animatedHeight.coerceAtLeast(2.dp.toPx()) // Minimum height
+                val finalHeight = animatedHeight.coerceAtLeast(12.dp.toPx()) // Minimum height so it's visible
                 val barTop = baseline - finalHeight
                 
                 if (day.hasLogs) {
@@ -244,8 +243,8 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
                     text = formatWeekdayShort(day.localDate),
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Bold,
                     color = if (isToday) colors.tertiary else colors.onSurfaceVariant
                 )
             }
@@ -267,28 +266,6 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
 @Composable
 fun HistoryChartLegend(modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-        Box(
-            Modifier.size(10.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            "Water logged",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.width(10.dp))
-        Box(
-            Modifier.size(8.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.outlineVariant)
-        )
-        Spacer(Modifier.width(5.dp))
-        Text(
-            "No logs",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.width(10.dp))
         val goalLineColor = MaterialTheme.colorScheme.outlineVariant
         Canvas(Modifier.width(18.dp).height(2.dp)) {
             drawLine(
@@ -302,7 +279,7 @@ fun HistoryChartLegend(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.width(6.dp))
         Text(
-            "Daily goal",
+            "Goal",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -416,7 +393,7 @@ fun EmptyHistoryCard() {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
         Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Your history starts here", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,)
+            Text("Your history starts here", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

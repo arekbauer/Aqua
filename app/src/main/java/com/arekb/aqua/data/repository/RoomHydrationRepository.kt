@@ -52,6 +52,10 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         dao.updateEntryAmount(intakeId, amountMl)
 
     override suspend fun clearDate(localDate: String) = dao.clearEntriesForDate(localDate)
+    
+    override suspend fun saveDailyGoal(localDate: String, goalMl: Int) {
+        dao.saveDailyGoal(DailyGoalEntity(localDate, goalMl))
+    }
 
     private fun SettingsEntity.toDomain() = HydrationSettings(
         dailyGoalMl = dailyGoalMl,

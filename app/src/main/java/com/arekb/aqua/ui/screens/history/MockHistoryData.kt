@@ -59,6 +59,12 @@ object MockHistoryData {
         val today = LocalDate.now()
         val zone = ZoneId.systemDefault()
 
+        // Set a daily goal that applies to our whole 30-day history window
+        repository.saveDailyGoal(
+            localDate = today.minusDays(30).toString(),
+            goalMl = 2_000
+        )
+
         // Generate data for the last 30 days
         for (i in 0..30) {
             val date = today.minusDays(i.toLong())

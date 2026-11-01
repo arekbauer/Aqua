@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 data class HistoryUiState(
     val isLoading: Boolean = true,
@@ -39,7 +40,7 @@ class HistoryViewModel @Inject constructor(
             while (true) {
                 val now = ZonedDateTime.now(clock.zone)
                 val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(now.zone)
-                delay(Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1L))
+                delay(Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1L).milliseconds)
                 refreshDate()
             }
         }
