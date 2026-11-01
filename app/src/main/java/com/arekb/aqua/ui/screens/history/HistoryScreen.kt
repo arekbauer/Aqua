@@ -58,6 +58,7 @@ import com.arekb.aqua.domain.model.HistoryPatternInsights
 import com.arekb.aqua.domain.usecase.HistoryInsightsCalculator
 import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.history.components.EmptyHistoryCard
+import com.arekb.aqua.ui.screens.history.components.HistoryChartLegend
 import com.arekb.aqua.ui.screens.history.components.HistoryDayRow
 import com.arekb.aqua.ui.screens.history.components.HistoryWeekChart
 import com.arekb.aqua.ui.screens.history.components.PatternSection
@@ -114,40 +115,7 @@ fun HistoryScreen(
             }
 
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier.size(10.dp).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "Water logged",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Box(
-                        Modifier.size(8.dp).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.outlineVariant)
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Text(
-                        "No logs",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Box(
-                        Modifier.width(18.dp).height(2.dp)
-                            .background(MaterialTheme.colorScheme.tertiary)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "Daily goal",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                HistoryChartLegend(modifier = Modifier.fillMaxWidth().padding(end = 12.dp))
             }
 
             item {

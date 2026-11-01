@@ -4,6 +4,7 @@ import android.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +25,14 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +43,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,66 +121,191 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
             else -> "$date, ${day.totalMl} millilitres, goal ${day.goalMl ?: "unavailable"}"
         }
     }
+    
+    val animationPlayed = rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        animationPlayed.value = true
+    }
+    val animationProgress = animateFloatAsState(
+        targetValue = if (animationPlayed.value) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "ChartAnimation"
+    )
+
+    val textMeasurer = rememberTextMeasurer()
+    val labelStyle = MaterialTheme.typography.labelSmall.copy(
+        color = colors.onSurfaceVariant,
+        fontWeight = FontWeight.Medium
+    )
+
     Column(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(colors.surfaceContainerLow)
-            .padding(horizontal = 16.dp, vertical = 18.dp)
+            .padding(horizontal = 16.dp, vertical = 20.dp)
     ) {
         Canvas(
-            Modifier.fillMaxWidth().height(160.dp)
+            Modifier.fillMaxWidth().height(180.dp)
                 .semantics { contentDescription = "Weekly water intake chart. $chartDescription" }
         ) {
             if (days.isEmpty()) return@Canvas
-            val topInset = 12.dp.toPx()
-            val bottomInset = 10.dp.toPx()
+            
+            // Increase maximum by 25% to leave plenty of room for text labels at the top
+            val maximum = (days.flatMap { listOf(it.totalMl, it.goalMl ?: 0) }.maxOrNull() ?: 0).coerceAtLeast(1) * 1.25f
+            val topInset = 24.dp.toPx()
+            val bottomInset = 12.dp.toPx()
             val chartHeight = size.height - topInset - bottomInset
-            val maximum = (days.flatMap { listOf(it.totalMl, it.goalMl ?: 0) }.maxOrNull() ?: 0)
-                .coerceAtLeast(1) * 1.12f
             val slotWidth = size.width / days.size
-            val barWidth = (slotWidth * .48f).coerceAtMost(28.dp.toPx())
+            val barWidth = (slotWidth * 0.45f).coerceAtMost(28.dp.toPx())
+            val cornerRadius = CornerRadius(barWidth / 2f)
+            
             val goalPath = Path()
             var hasGoal = false
 
+            // Draw goal line behind the bars
             days.forEachIndexed { index, day ->
-                val centerX = slotWidth * (index + .5f)
+                val centerX = slotWidth * (index + 0.5f)
                 val baseline = topInset + chartHeight
-                val barTop = baseline - chartHeight * (day.totalMl / maximum)
-                if (day.hasLogs) {
-                    drawRoundRect(
-                        color = if (day.localDate == today) colors.tertiary else colors.primary,
-                        topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, barTop),
-                        size = androidx.compose.ui.geometry.Size(barWidth, (baseline - barTop).coerceAtLeast(2.dp.toPx())),
-                        cornerRadius = CornerRadius(barWidth / 2f)
-                    )
-                } else {
-                    drawCircle(colors.outlineVariant, radius = 3.dp.toPx(), center = androidx.compose.ui.geometry.Offset(centerX, baseline))
-                }
-
+                
                 day.goalMl?.let { goal ->
                     val goalY = baseline - chartHeight * (goal / maximum)
-                    if (!hasGoal) goalPath.moveTo(centerX, goalY) else goalPath.lineTo(centerX, goalY)
+                    if (!hasGoal) {
+                        goalPath.moveTo(centerX, goalY)
+                    } else {
+                        goalPath.lineTo(centerX, goalY)
+                    }
                     hasGoal = true
                 }
             }
+            
             if (hasGoal) {
                 drawPath(
-                    goalPath,
-                    colors.tertiary,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(7.dp.toPx(), 5.dp.toPx())))
+                    path = goalPath,
+                    color = colors.outlineVariant,
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()), 0f)
+                    )
+                )
+            }
+
+            // Draw bars and labels
+            days.forEachIndexed { index, day ->
+                val centerX = slotWidth * (index + 0.5f)
+                val baseline = topInset + chartHeight
+                
+                val targetHeight = chartHeight * (day.totalMl / maximum)
+                val animatedHeight = targetHeight * animationProgress.value
+                val finalHeight = animatedHeight.coerceAtLeast(2.dp.toPx()) // Minimum height
+                val barTop = baseline - finalHeight
+                
+                if (day.hasLogs) {
+                    val barColor = if (day.localDate == today) colors.tertiary else colors.primary
+                    drawRoundRect(
+                        color = barColor,
+                        topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, barTop),
+                        size = androidx.compose.ui.geometry.Size(barWidth, finalHeight),
+                        cornerRadius = cornerRadius
+                    )
+                    
+                    // Fade in the text labels slightly after the bars start rising
+                    val textAlpha = (animationProgress.value * 1.5f - 0.5f).coerceIn(0f, 1f)
+                    if (textAlpha > 0f) {
+                        val valueText = day.totalMl.toString()
+                        val textLayout = textMeasurer.measure(valueText, style = labelStyle)
+                        drawText(
+                            textLayoutResult = textLayout,
+                            topLeft = androidx.compose.ui.geometry.Offset(
+                                x = centerX - textLayout.size.width / 2f,
+                                y = barTop - textLayout.size.height - 4.dp.toPx()
+                            ),
+                            alpha = textAlpha
+                        )
+                    }
+                } else {
+                    drawCircle(
+                        color = colors.outlineVariant,
+                        radius = 3.dp.toPx(),
+                        center = androidx.compose.ui.geometry.Offset(centerX, baseline - 3.dp.toPx())
+                    )
+                }
+            }
+        }
+        
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth()) {
+            days.forEach { day ->
+                val isToday = day.localDate == today
+                Text(
+                    text = formatWeekdayShort(day.localDate),
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isToday) colors.tertiary else colors.onSurfaceVariant
                 )
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            days.forEach { day ->
-                Text(formatWeekdayShort(day.localDate), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
+        
         if (days.none { it.goalMl != null }) {
-            Spacer(Modifier.height(10.dp))
-            Text("Goal line unavailable for these dates", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Goal line unavailable for these dates",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+    }
+}
+
+@Composable
+fun HistoryChartLegend(modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+        Box(
+            Modifier.size(10.dp).clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "Water logged",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.width(10.dp))
+        Box(
+            Modifier.size(8.dp).clip(CircleShape)
+                .background(MaterialTheme.colorScheme.outlineVariant)
+        )
+        Spacer(Modifier.width(5.dp))
+        Text(
+            "No logs",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.width(10.dp))
+        val goalLineColor = MaterialTheme.colorScheme.outlineVariant
+        Canvas(Modifier.width(18.dp).height(2.dp)) {
+            drawLine(
+                color = goalLineColor,
+                start = androidx.compose.ui.geometry.Offset(0f, size.height / 2),
+                end = androidx.compose.ui.geometry.Offset(size.width, size.height / 2),
+                strokeWidth = size.height,
+                cap = StrokeCap.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()), 0f)
+            )
+        }
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "Daily goal",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
