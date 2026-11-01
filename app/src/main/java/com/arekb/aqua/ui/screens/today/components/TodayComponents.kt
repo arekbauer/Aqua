@@ -438,8 +438,8 @@ fun IntakeLogRow(
             Modifier.fillMaxWidth().padding(start = 18.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${entry.amountMl} ml", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-            Text("$time", modifier = Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("${entry.amountMl} ml", style = MaterialTheme.typography.titleMediumEmphasized, color = MaterialTheme.colorScheme.primary)
+            Text("$time", modifier = Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             IconButton(onClick = onEdit) {
                 Icon(Icons.Outlined.Edit, contentDescription = "Edit ${entry.amountMl} ml log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
