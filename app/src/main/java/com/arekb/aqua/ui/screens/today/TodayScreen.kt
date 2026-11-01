@@ -40,7 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.ui.components.AquaTopAppBar
-import com.arekb.aqua.ui.screens.history.todayHeading
+import com.arekb.aqua.ui.screens.history.components.todayHeading
 import com.arekb.aqua.ui.screens.today.components.CookieReservoirProgressGauge
 import com.arekb.aqua.ui.screens.today.components.DailyGoalSummary
 import com.arekb.aqua.ui.screens.today.components.DailyGoalSummaryStyle

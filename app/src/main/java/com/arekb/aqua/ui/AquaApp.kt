@@ -224,7 +224,16 @@ private fun TodayRoute(
 private fun HistoryRoute(modifier: Modifier) {
     val viewModel: HistoryViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryScreen(state.days, modifier)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, viewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshDate()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(viewModel) { viewModel.refreshDate() }
+    HistoryScreen(state, modifier)
 }
 
 @Composable
