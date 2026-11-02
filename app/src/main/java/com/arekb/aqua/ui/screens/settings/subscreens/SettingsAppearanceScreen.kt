@@ -2,7 +2,6 @@ package com.arekb.aqua.ui.screens.settings.subscreens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -24,6 +23,13 @@ fun SettingsAppearanceScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var theme by remember(settings.appTheme) { mutableStateOf(settings.appTheme) }
 
+    fun handleThemeChange(newTheme: AppTheme) {
+        if (newTheme != theme) {
+            theme = newTheme
+            onSave(settings.copy(appTheme = newTheme))
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -43,21 +49,21 @@ fun SettingsAppearanceScreen(
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         SegmentedButton(
                             selected = theme == AppTheme.SYSTEM,
-                            onClick = { theme = AppTheme.SYSTEM },
+                            onClick = { handleThemeChange(AppTheme.SYSTEM) },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
                         ) {
                             Text("System")
                         }
                         SegmentedButton(
                             selected = theme == AppTheme.LIGHT,
-                            onClick = { theme = AppTheme.LIGHT },
+                            onClick = { handleThemeChange(AppTheme.LIGHT) },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
                         ) {
                             Text("Light")
                         }
                         SegmentedButton(
                             selected = theme == AppTheme.DARK,
-                            onClick = { theme = AppTheme.DARK },
+                            onClick = { handleThemeChange(AppTheme.DARK) },
                             shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
                         ) {
                             Text("Dark")
@@ -65,17 +71,6 @@ fun SettingsAppearanceScreen(
                     }
                 }
                 Spacer(Modifier.height(14.dp))
-            }
-
-            item {
-                Button(
-                    onClick = {
-                        onSave(settings.copy(appTheme = theme))
-                        onBack()
-                    },
-                    modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)
-                ) { Text("Save changes") }
-                Spacer(Modifier.height(24.dp))
             }
         }
     }

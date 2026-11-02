@@ -1,5 +1,6 @@
 package com.arekb.aqua.ui.screens.settings.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,8 +40,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import com.arekb.aqua.R
+import com.arekb.aqua.domain.model.LiquidUnit
 
 @Composable
 fun DailyGoalSetting(
@@ -92,7 +99,9 @@ fun DailyGoalSetting(
 @Composable
 fun SettingsCategoryItem(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
@@ -160,7 +169,9 @@ fun QuickAddSettingsGrid(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -183,13 +194,85 @@ fun QuickAddSettingsGrid(
                                     Text("  $unitLabel", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 HorizontalDivider(
-                                    modifier = Modifier.fillMaxWidth(0.8f).padding(top = 2.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.8f)
+                                        .padding(top = 2.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
                             }
                         }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun UnitsPicker(
+    unit: LiquidUnit,
+    onUnitChange: (LiquidUnit) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .selectable(
+                    selected = unit == LiquidUnit.ML,
+                    onClick = { onUnitChange(LiquidUnit.ML) },
+                    role = Role.RadioButton
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (unit == LiquidUnit.ML) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
+            ),
+            border = if (unit == LiquidUnit.ML) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "ml",
+                    style = MaterialTheme.typography.displaySmallEmphasized,
+                    color = if (unit == LiquidUnit.ML) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text("Milliliters", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .selectable(
+                    selected = unit == LiquidUnit.OZ,
+                    onClick = { onUnitChange(LiquidUnit.OZ) },
+                    role = Role.RadioButton
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (unit == LiquidUnit.OZ) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
+            ),
+            border = if (unit == LiquidUnit.OZ) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "oz",
+                    style = MaterialTheme.typography.displaySmallEmphasized,
+                    color = if (unit == LiquidUnit.OZ) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text("Fluid Ounces", style = MaterialTheme.typography.labelMedium)
             }
         }
     }

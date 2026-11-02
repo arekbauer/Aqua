@@ -2,8 +2,6 @@ package com.arekb.aqua.ui.screens.settings.subscreens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,6 +17,7 @@ import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.settings.components.DailyGoalSetting
 import com.arekb.aqua.ui.screens.settings.components.QuickAddSettingsGrid
 import com.arekb.aqua.ui.screens.settings.components.SettingsCard
+import com.arekb.aqua.ui.screens.settings.components.UnitsPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +40,21 @@ fun SettingsPreferencesScreen(
     
     val sliderRange = if (unit == LiquidUnit.ML) 1000f..5000f else 35f..175f
     val sliderStep = if (unit == LiquidUnit.ML) 100f else 5f
+
+    LaunchedEffect(unit, goalValue, presetTexts) {
+        if (valid) {
+            val sysGoal = goal.toSystemMl(unit)
+            val sysPresets = presets.map { it.toSystemMl(unit) }
+            val updated = settings.copy(
+                dailyGoalMl = sysGoal,
+                presetsMl = sysPresets,
+                liquidUnit = unit
+            )
+            if (updated != settings) {
+                onSave(updated)
+            }
+        }
+    }
 
     fun handleUnitChange(newUnit: LiquidUnit) {
         if (newUnit != unit) {
@@ -90,37 +104,12 @@ fun SettingsPreferencesScreen(
 
             item {
                 SettingsCard("Units", "Choose your preferred unit") {
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        SegmentedButton(
-                            selected = unit == LiquidUnit.ML,
-                            onClick = { handleUnitChange(LiquidUnit.ML) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                        ) {
-                            Text("Milliliters (ml)")
-                        }
-                        SegmentedButton(
-                            selected = unit == LiquidUnit.OZ,
-                            onClick = { handleUnitChange(LiquidUnit.OZ) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                        ) {
-                            Text("Fluid Ounces (oz)")
-                        }
-                    }
+                    UnitsPicker(
+                        unit = unit,
+                        onUnitChange = { handleUnitChange(it) }
+                    )
                 }
                 Spacer(Modifier.height(14.dp))
-            }
-
-            item {
-                Button(
-                    onClick = {
-                        val sysGoal = goal.toSystemMl(unit)
-                        val sysPresets = presets.map { it.toSystemMl(unit) }
-                        onSave(settings.copy(dailyGoalMl = sysGoal, presetsMl = sysPresets, liquidUnit = unit))
-                        onBack()
-                    },
-                    enabled = valid, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)
-                ) { Text("Save changes") }
-                Spacer(Modifier.height(24.dp))
             }
         }
     }
