@@ -4,9 +4,11 @@ import com.arekb.aqua.data.local.AquaDao
 import com.arekb.aqua.data.local.DailyGoalEntity
 import com.arekb.aqua.data.local.IntakeEntity
 import com.arekb.aqua.data.local.SettingsEntity
+import com.arekb.aqua.domain.model.AppTheme
 import com.arekb.aqua.domain.model.DailyTotal
 import com.arekb.aqua.domain.model.DailyGoal
 import com.arekb.aqua.domain.model.HydrationSettings
+import com.arekb.aqua.domain.model.LiquidUnit
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.repository.HydrationRepository
 import javax.inject.Inject
@@ -57,9 +59,16 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         dao.saveDailyGoal(DailyGoalEntity(localDate, goalMl))
     }
 
+    override suspend fun clearAllHistory() {
+        dao.clearAllHistory()
+        ensureDailyGoalForToday()
+    }
+
     private fun SettingsEntity.toDomain() = HydrationSettings(
         dailyGoalMl = dailyGoalMl,
-        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl)
+        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl),
+        liquidUnit = try { LiquidUnit.valueOf(liquidUnit) } catch (e: Exception) { LiquidUnit.ML },
+        appTheme = try { AppTheme.valueOf(appTheme) } catch (e: Exception) { AppTheme.SYSTEM }
     )
 
     private fun HydrationSettings.toEntity() = SettingsEntity(
@@ -68,7 +77,9 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         presetTwoMl = presetsMl[1],
         presetThreeMl = presetsMl[2],
         // Keep the legacy Room column populated so the database schema stays compatible.
-        presetFourMl = 750
+        presetFourMl = 750,
+        liquidUnit = liquidUnit.name,
+        appTheme = appTheme.name
     )
 
     private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate)

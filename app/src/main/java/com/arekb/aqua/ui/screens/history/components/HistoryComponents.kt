@@ -55,6 +55,9 @@ import com.arekb.aqua.domain.model.HistoryDay
 import com.arekb.aqua.domain.model.HistoryInsights
 import com.arekb.aqua.domain.model.HistoryPatternInsights
 import com.arekb.aqua.domain.usecase.HistoryInsightsCalculator
+import com.arekb.aqua.domain.model.LiquidUnit
+import com.arekb.aqua.domain.model.label
+import com.arekb.aqua.domain.model.toUserUnit
 import java.text.NumberFormat
 import java.time.Duration
 import java.time.LocalDate
@@ -64,11 +67,12 @@ import java.util.Locale
 import kotlin.collections.forEach
 
 @Composable
-fun SummarySection(insights: HistoryInsights) {
+fun SummarySection(insights: HistoryInsights, unit: LiquidUnit) {
+    val unitLabel = unit.label()
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         SummaryCard(
             title = "Daily average",
-            value = insights.averageCompletedDayMl?.let { "${formatMl(it)} ml" } ?: "—",
+            value = insights.averageCompletedDayMl?.let { "${formatMl(it.toUserUnit(unit))} $unitLabel" } ?: "—",
             modifier = Modifier.weight(1f)
         )
         SummaryCard(
@@ -111,14 +115,17 @@ fun SectionHeading(title: String, subtitle: String) {
 }
 
 @Composable
-fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
+fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
     val colors = MaterialTheme.colorScheme
+    val unitLabel = unit.label()
     val chartDescription = days.joinToString(separator = ", ") { day ->
         val date = formatShortDate(day.localDate)
+        val dayTotal = day.totalMl.toUserUnit(unit)
+        val dayGoal = day.goalMl?.toUserUnit(unit)
         when {
-            day.localDate == today -> "$date, today, ${day.totalMl} millilitres, in progress, goal ${day.goalMl ?: "unavailable"}"
-            !day.hasLogs -> "$date, no logs, goal ${day.goalMl ?: "unavailable"}"
-            else -> "$date, ${day.totalMl} millilitres, goal ${day.goalMl ?: "unavailable"}"
+            day.localDate == today -> "$date, today, $dayTotal $unitLabel, in progress, goal ${dayGoal ?: "unavailable"}"
+            !day.hasLogs -> "$date, no logs, goal ${dayGoal ?: "unavailable"}"
+            else -> "$date, $dayTotal $unitLabel, goal ${dayGoal ?: "unavailable"}"
         }
     }
     
@@ -214,7 +221,7 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String) {
                     // Fade in the text labels slightly after the bars start rising
                     val textAlpha = (animationProgress.value * 1.5f - 0.5f).coerceIn(0f, 1f)
                     if (textAlpha > 0f) {
-                        val valueText = day.totalMl.toString()
+                        val valueText = day.totalMl.toUserUnit(unit).toString()
                         val textLayout = textMeasurer.measure(valueText, style = labelStyle)
                         drawText(
                             textLayoutResult = textLayout,
@@ -336,8 +343,9 @@ private fun PatternCard(title: String, value: String) {
 }
 
 @Composable
-fun HistoryDayRow(day: HistoryDay, today: String) {
+fun HistoryDayRow(day: HistoryDay, today: String, unit: LiquidUnit) {
     val colors = MaterialTheme.colorScheme
+    val unitLabel = unit.label()
     val isToday = day.localDate == today
     val isGoalMet = day.goalMl != null && day.totalMl >= day.goalMl
     val status = when (HistoryInsightsCalculator.goalStatus(day, today)) {
@@ -370,10 +378,11 @@ fun HistoryDayRow(day: HistoryDay, today: String) {
             }
             
             Column(horizontalAlignment = Alignment.End) {
-                Text("${formatMl(day.totalMl)} ml", style = MaterialTheme.typography.titleMediumEmphasized, color = colors.primary)
+                val dayTotal = day.totalMl.toUserUnit(unit)
+                Text("${formatMl(dayTotal)} $unitLabel", style = MaterialTheme.typography.titleMediumEmphasized, color = colors.primary)
                 if (day.goalMl != null && day.goalMl > 0) {
                     Spacer(Modifier.height(6.dp))
-                    val progress = (day.totalMl.toFloat() / day.goalMl.toFloat()).coerceIn(0f, 1f)
+                    val progress = (day.totalMl.toFloat() / day.goalMl.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.width(64.dp).height(6.dp).clip(CircleShape),

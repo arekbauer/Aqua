@@ -25,7 +25,9 @@ data class SettingsEntity(
     val presetOneMl: Int = 200,
     val presetTwoMl: Int = 350,
     val presetThreeMl: Int = 500,
-    val presetFourMl: Int = 750
+    val presetFourMl: Int = 750,
+    val liquidUnit: String = "ML",
+    val appTheme: String = "SYSTEM"
 )
 
 @Entity(tableName = "daily_goal_history")
@@ -85,9 +87,21 @@ interface AquaDao {
 
     @Query("SELECT localDate, SUM(amountMl) AS totalMl FROM intake_entries GROUP BY localDate ORDER BY localDate DESC")
     fun observeDailyTotals(): Flow<List<DailyTotalRow>>
+
+    @Query("DELETE FROM intake_entries")
+    suspend fun clearAllEntries()
+
+    @Query("DELETE FROM daily_goal_history")
+    suspend fun clearAllDailyGoals()
+
+    @androidx.room.Transaction
+    suspend fun clearAllHistory() {
+        clearAllEntries()
+        clearAllDailyGoals()
+    }
 }
 
-@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 2, exportSchema = true)
+@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 3, exportSchema = true)
 abstract class AquaDatabase : RoomDatabase() {
     abstract fun aquaDao(): AquaDao
 }

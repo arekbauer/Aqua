@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.repository.HydrationRepository
+import com.arekb.aqua.domain.usecase.ClearAllHistoryUseCase
 import com.arekb.aqua.domain.usecase.ResetDailyIntakeUseCase
 import com.arekb.aqua.domain.usecase.SaveHydrationSettingsUseCase
 import com.arekb.aqua.ui.model.UserMessage
@@ -25,7 +26,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     repository: HydrationRepository,
     private val saveHydrationSettings: SaveHydrationSettingsUseCase,
-    private val resetDailyIntake: ResetDailyIntakeUseCase
+    private val resetDailyIntake: ResetDailyIntakeUseCase,
+    private val clearAllHistory: ClearAllHistoryUseCase
 ) : ViewModel() {
     private val messageState = MutableStateFlow<UserMessage?>(null)
     private var nextMessageId = 0L
@@ -40,6 +42,10 @@ class SettingsViewModel @Inject constructor(
 
     fun resetToday() {
         performWrite("reset today’s total", "Today’s total reset") { resetDailyIntake() }
+    }
+
+    fun wipeAllData() {
+        performWrite("wipe all history", "All history wiped") { clearAllHistory() }
     }
 
     fun messageShown(id: Long) {

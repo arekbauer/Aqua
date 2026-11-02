@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.arekb.aqua.domain.model.LiquidUnit
+import com.arekb.aqua.domain.model.label
+import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.ui.theme.AquaTheme
 
 /** C1 is the primary quiet text treatment; C2 is retained as a compact chip alternative. */
@@ -29,13 +32,19 @@ enum class DailyGoalSummaryStyle {
 fun DailyGoalSummary(
     currentMl: Int,
     goalMl: Int,
+    unit: LiquidUnit,
     modifier: Modifier = Modifier,
     style: DailyGoalSummaryStyle = DailyGoalSummaryStyle.CENTERED_TEXT
 ) {
     val colors = MaterialTheme.colorScheme
     val remainingMl = (goalMl - currentMl).coerceAtLeast(0)
-    val goalReached = goalMl in 1..currentMl
-    val remainingLabel = if (goalReached) "Daily goal reached" else "$remainingMl ml to go"
+    
+    val unitLabel = unit.label()
+    val remainingVal = remainingMl.toUserUnit(unit)
+    val goalVal = goalMl.toUserUnit(unit)
+    val goalReached = (goalMl in 1..currentMl) || remainingVal <= 0
+    
+    val remainingLabel = if (goalReached) "Daily goal reached" else "$remainingVal $unitLabel to go"
 
     when (style) {
         DailyGoalSummaryStyle.CENTERED_TEXT -> {
@@ -50,7 +59,7 @@ fun DailyGoalSummary(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Daily goal · $goalMl ml",
+                    text = "Daily goal · $goalVal $unitLabel",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant
                 )
@@ -72,7 +81,7 @@ fun DailyGoalSummary(
                 Spacer(Modifier.width(12.dp))
                 Surface(shape = CircleShape, color = colors.surfaceContainerHigh) {
                     Text(
-                        text = "Goal · $goalMl ml",
+                        text = "Goal · $goalVal $unitLabel",
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.labelLarge,
                         color = colors.onSurfaceVariant
@@ -92,10 +101,11 @@ private fun DailyGoalSummaryPreview() {
                 modifier = Modifier.padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                DailyGoalSummary(currentMl = 1_250, goalMl = 2_000)
+                DailyGoalSummary(currentMl = 1_250, goalMl = 2_000, unit = LiquidUnit.ML)
                 DailyGoalSummary(
                     currentMl = 1_250,
                     goalMl = 2_000,
+                    unit = LiquidUnit.ML,
                     style = DailyGoalSummaryStyle.GOAL_CHIP
                 )
             }

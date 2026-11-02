@@ -7,9 +7,19 @@ data class WaterIntake(
     val localDate: String
 )
 
+enum class LiquidUnit { ML, OZ }
+
+fun Int.toUserUnit(unit: LiquidUnit): Int = if (unit == LiquidUnit.OZ) Math.round(this / 29.5735f) else this
+fun Int.toSystemMl(unit: LiquidUnit): Int = if (unit == LiquidUnit.OZ) Math.round(this * 29.5735f) else this
+fun LiquidUnit.label(): String = if (this == LiquidUnit.OZ) "oz" else "ml"
+
+enum class AppTheme { SYSTEM, LIGHT, DARK }
+
 data class HydrationSettings(
     val dailyGoalMl: Int = 2_000,
-    val presetsMl: List<Int> = listOf(200, 350, 500)
+    val presetsMl: List<Int> = listOf(200, 350, 500),
+    val liquidUnit: LiquidUnit = LiquidUnit.ML,
+    val appTheme: AppTheme = AppTheme.SYSTEM
 )
 
 data class DailyTotal(

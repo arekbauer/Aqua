@@ -20,5 +20,12 @@ internal object DatabaseMigrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `liquidUnit` TEXT NOT NULL DEFAULT 'ML'")
+            db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `appTheme` TEXT NOT NULL DEFAULT 'SYSTEM'")
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 }

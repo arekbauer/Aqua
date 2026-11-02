@@ -104,14 +104,14 @@ fun HistoryScreen(
         ) {
 
             item {
-                SummarySection(insights)
+                SummarySection(insights, state.settings.liquidUnit)
                 Spacer(Modifier.height(24.dp))
             }
 
             item {
                 Text("This week", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))
-                HistoryWeekChart(insights.week, insights.today)
+                HistoryWeekChart(insights.week, insights.today, state.settings.liquidUnit)
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -142,7 +142,7 @@ fun HistoryScreen(
                     key = { index -> visibleDays[index].localDate }
                 ) { index ->
                     val day = visibleDays[index]
-                    HistoryDayRow(day, today = insights.today)
+                    HistoryDayRow(day, today = insights.today, unit = state.settings.liquidUnit)
                     Spacer(Modifier.height(10.dp))
                 }
                 

@@ -100,6 +100,7 @@ private class FakeHydrationRepository : HydrationRepository {
     override suspend fun undoIntake(intake: WaterIntake) {}
     override suspend fun clearDate(localDate: String) {}
     override suspend fun saveDailyGoal(localDate: String, goalMl: Int) {}
+    override suspend fun clearAllHistory() { entriesByDate.clear() }
 
     private fun entriesFor(date: String) = entriesByDate.getOrPut(date) { MutableStateFlow(emptyList()) }
 }

@@ -72,6 +72,9 @@ import com.arekb.aqua.ui.screens.today.TodayViewModel
 import com.arekb.aqua.ui.screens.history.HistoryViewModel
 import com.arekb.aqua.ui.screens.settings.SettingsViewModel
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.arekb.aqua.domain.model.AppTheme
+
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
@@ -79,7 +82,16 @@ import com.arekb.aqua.ui.screens.settings.SettingsViewModel
 
 @Composable
 fun AquaRoot() {
-    AquaTheme {
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val appTheme = settingsState.settings.appTheme
+    val darkTheme = when (appTheme) {
+        AppTheme.SYSTEM -> isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+    }
+
+    AquaTheme(darkTheme = darkTheme) {
         val navigationState = rememberAquaNavigationState()
         val snackbarHostState = remember { SnackbarHostState() }
         val selectedDestination = navigationState.topLevelRoute
@@ -241,14 +253,33 @@ private fun SettingsRoute(modifier: Modifier, snackbarHostState: SnackbarHostSta
     val viewModel: SettingsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showResetConfirmation by remember { mutableStateOf(false) }
+    var showWipeConfirmation by remember { mutableStateOf(false) }
     UserMessageEffect(state.message, snackbarHostState, onUndo = {}, onMessageShown = viewModel::messageShown)
 
     SettingsScreen(
         settings = state.settings,
         modifier = modifier,
         onSave = viewModel::saveSettings,
-        onReset = { showResetConfirmation = true }
+        onReset = { showResetConfirmation = true },
+        onWipeAllData = { showWipeConfirmation = true }
     )
+
+    if (showWipeConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showWipeConfirmation = false },
+            title = { Text("Wipe all history?") },
+            text = { Text("This will permanently delete all your hydration records. This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.wipeAllData()
+                    showWipeConfirmation = false
+                }) { Text("Wipe") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showWipeConfirmation = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     if (showResetConfirmation) {
         AlertDialog(

@@ -39,6 +39,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.WaterIntake
+import com.arekb.aqua.domain.model.label
+import com.arekb.aqua.domain.model.toSystemMl
+import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.history.components.todayHeading
 import com.arekb.aqua.ui.screens.today.components.CookieReservoirProgressGauge
@@ -79,11 +82,12 @@ fun TodayScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                CookieReservoirProgressGauge(state.todayTotalMl, state.settings.dailyGoalMl)
+                CookieReservoirProgressGauge(state.todayTotalMl, state.settings.dailyGoalMl, state.settings.liquidUnit)
                 Spacer(Modifier.height(12.dp))
                 DailyGoalSummary(
                     currentMl = state.todayTotalMl,
                     goalMl = state.settings.dailyGoalMl,
+                    unit = state.settings.liquidUnit,
                     style = DailyGoalSummaryStyle.CENTERED_TEXT
                 )
                 Spacer(Modifier.height(28.dp))
@@ -106,6 +110,7 @@ fun TodayScreen(
                 Spacer(Modifier.height(12.dp))
                 QuickAddButtonGroup(
                     presetsMl = state.settings.presetsMl,
+                    unit = state.settings.liquidUnit,
                     modifier = Modifier.fillMaxWidth(),
                     onAdd = onAdd
                 )
@@ -137,8 +142,9 @@ fun TodayScreen(
                 items(items = state.entries, key = WaterIntake::id) { entry ->
                     IntakeLogRow(
                         entry = entry,
+                        unit = state.settings.liquidUnit,
                         modifier = Modifier.animateItem(),
-                        onEdit = { editingEntry = entry; editAmount = entry.amountMl.toString() },
+                        onEdit = { editingEntry = entry; editAmount = entry.amountMl.toUserUnit(state.settings.liquidUnit).toString() },
                         onDelete = { onDelete(entry) }
                     )
                 }
@@ -156,11 +162,15 @@ fun TodayScreen(
                     showDrinkPicker = false
                     onAdd(amount)
                 },
+                unit = state.settings.liquidUnit
             )
         }
     }
 
     editingEntry?.let { entry ->
+        val unit = state.settings.liquidUnit
+        val unitLabel = unit.label()
+        
         AlertDialog(
             onDismissRequest = { editingEntry = null },
             title = { Text("Edit water log", style = MaterialTheme.typography.titleLargeEmphasized) },
@@ -168,16 +178,23 @@ fun TodayScreen(
                 OutlinedTextField(
                     value = editAmount,
                     onValueChange = { editAmount = it.filter(Char::isDigit).take(5) },
-                    label = { Text("Amount in ml") },
+                    label = { Text("Amount in $unitLabel") },
                     shape = RoundedCornerShape(100.dp),
-                    suffix = { Text("ml") },
+                    suffix = { Text(unitLabel) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    editAmount.toIntOrNull()?.takeIf { it > 0 }?.let { onEdit(entry, it) }
+                    editAmount.toIntOrNull()?.takeIf { it > 0 }?.let { newAmountVal ->
+                        val updatedMl = if (newAmountVal == entry.amountMl.toUserUnit(unit)) {
+                            entry.amountMl
+                        } else {
+                            newAmountVal.toSystemMl(unit)
+                        }
+                        onEdit(entry, updatedMl)
+                    }
                     editingEntry = null
                 }, enabled = editAmount.toIntOrNull()?.let { it > 0 } == true) { Text("Save") }
             },

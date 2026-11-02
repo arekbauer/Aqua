@@ -30,4 +30,8 @@ object UseCaseModule {
     fun provideResetDailyIntakeUseCase(repository: HydrationRepository, clock: Clock) =
         ResetDailyIntakeUseCase(repository, clock)
 
+    @Provides
+    fun provideClearAllHistoryUseCase(repository: HydrationRepository) =
+        com.arekb.aqua.domain.usecase.ClearAllHistoryUseCase(repository)
+
 }

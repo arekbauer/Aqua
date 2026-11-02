@@ -121,6 +121,7 @@ private class FakeHydrationRepository : HydrationRepository {
     }
     override suspend fun clearDate(localDate: String) { entriesFor(localDate).value = emptyList() }
     override suspend fun saveDailyGoal(localDate: String, goalMl: Int) { /* Fake implementation */ }
+    override suspend fun clearAllHistory() { entriesByDate.clear() }
 
     private fun entriesFor(date: String) = entriesByDate.getOrPut(date) { MutableStateFlow(emptyList()) }
     private fun <T> flowOfValue(value: List<T>): Flow<List<T>> = MutableStateFlow(value)
