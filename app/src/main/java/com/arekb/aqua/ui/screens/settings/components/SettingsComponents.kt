@@ -32,6 +32,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import kotlin.math.roundToInt
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.painterResource
+import com.arekb.aqua.R
 
 @Composable
 fun DailyGoalSetting(
@@ -125,6 +134,63 @@ fun SettingsCard(title: String, subtitle: String, content: @Composable () -> Uni
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             content()
+        }
+    }
+}
+
+@Composable
+fun QuickAddSettingsGrid(
+    presetTexts: List<String>,
+    unitLabel: String,
+    onPresetChange: (index: Int, newValue: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        presetTexts.forEachIndexed { index, textValue ->
+            val icon = when (index) {
+                0 -> R.drawable.icon_mug
+                1 -> R.drawable.icon_glass_cup
+                else -> R.drawable.icon_water_bottle
+            }
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(12.dp))
+                    
+                    BasicTextField(
+                        value = textValue,
+                        onValueChange = { onPresetChange(index, it.filter(Char::isDigit).take(4)) },
+                        textStyle = MaterialTheme.typography.titleMediumEmphasized.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        decorationBox = { innerTextField ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Box(modifier = Modifier.width(IntrinsicSize.Min)) {
+                                        innerTextField()
+                                    }
+                                    Text("  $unitLabel", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                HorizontalDivider(
+                                    modifier = Modifier.fillMaxWidth(0.8f).padding(top = 2.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }

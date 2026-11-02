@@ -17,6 +17,7 @@ import com.arekb.aqua.domain.model.toSystemMl
 import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.settings.components.DailyGoalSetting
+import com.arekb.aqua.ui.screens.settings.components.QuickAddSettingsGrid
 import com.arekb.aqua.ui.screens.settings.components.SettingsCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,16 +77,13 @@ fun SettingsPreferencesScreen(
 
             item {
                 SettingsCard("Quick add", "Choose three amounts for your buttons") {
-                    presetTexts.forEachIndexed { index, value ->
-                        OutlinedTextField(
-                            value = value,
-                            onValueChange = { updated -> presetTexts = presetTexts.toMutableList().also { it[index] = updated.filter(Char::isDigit).take(5) } },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp),
-                            label = { Text("Preset ${index + 1}") }, suffix = { Text(unitLabel) }, singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textStyle = MaterialTheme.typography.bodyLarge
-                        )
-                    }
+                    QuickAddSettingsGrid(
+                        presetTexts = presetTexts,
+                        unitLabel = unitLabel,
+                        onPresetChange = { index, newValue -> 
+                            presetTexts = presetTexts.toMutableList().also { it[index] = newValue }
+                        }
+                    )
                 }
                 Spacer(Modifier.height(14.dp))
             }
