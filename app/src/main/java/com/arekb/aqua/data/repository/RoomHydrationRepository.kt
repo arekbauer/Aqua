@@ -68,7 +68,8 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         dailyGoalMl = dailyGoalMl,
         presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl),
         liquidUnit = try { LiquidUnit.valueOf(liquidUnit) } catch (e: Exception) { LiquidUnit.ML },
-        appTheme = try { AppTheme.valueOf(appTheme) } catch (e: Exception) { AppTheme.SYSTEM }
+        appTheme = try { AppTheme.valueOf(appTheme) } catch (e: Exception) { AppTheme.SYSTEM },
+        isDynamicColorEnabled = isDynamicColorEnabled
     )
 
     private fun HydrationSettings.toEntity() = SettingsEntity(
@@ -79,7 +80,8 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         // Keep the legacy Room column populated so the database schema stays compatible.
         presetFourMl = 750,
         liquidUnit = liquidUnit.name,
-        appTheme = appTheme.name
+        appTheme = appTheme.name,
+        isDynamicColorEnabled = isDynamicColorEnabled
     )
 
     private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate)

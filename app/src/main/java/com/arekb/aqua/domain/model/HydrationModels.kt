@@ -19,7 +19,8 @@ data class HydrationSettings(
     val dailyGoalMl: Int = 2_000,
     val presetsMl: List<Int> = listOf(200, 350, 500),
     val liquidUnit: LiquidUnit = LiquidUnit.ML,
-    val appTheme: AppTheme = AppTheme.SYSTEM
+    val appTheme: AppTheme = AppTheme.SYSTEM,
+    val isDynamicColorEnabled: Boolean = true
 )
 
 data class DailyTotal(

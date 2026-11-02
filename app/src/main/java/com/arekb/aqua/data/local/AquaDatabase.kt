@@ -27,7 +27,8 @@ data class SettingsEntity(
     val presetThreeMl: Int = 500,
     val presetFourMl: Int = 750,
     val liquidUnit: String = "ML",
-    val appTheme: String = "SYSTEM"
+    val appTheme: String = "SYSTEM",
+    val isDynamicColorEnabled: Boolean = true
 )
 
 @Entity(tableName = "daily_goal_history")
@@ -101,7 +102,7 @@ interface AquaDao {
     }
 }
 
-@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 3, exportSchema = true)
+@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 4, exportSchema = true)
 abstract class AquaDatabase : RoomDatabase() {
     abstract fun aquaDao(): AquaDao
 }

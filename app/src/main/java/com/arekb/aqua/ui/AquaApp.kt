@@ -84,13 +84,14 @@ fun AquaRoot() {
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val appTheme = settingsState.settings.appTheme
+    val dynamicColor = settingsState.settings.isDynamicColorEnabled
     val darkTheme = when (appTheme) {
         AppTheme.SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
 
-    AquaTheme(darkTheme = darkTheme) {
+    AquaTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
         val navigationState = rememberAquaNavigationState()
         val snackbarHostState = remember { SnackbarHostState() }
         val selectedDestination = navigationState.topLevelRoute
