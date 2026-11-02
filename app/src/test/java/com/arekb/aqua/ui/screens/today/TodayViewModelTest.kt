@@ -2,6 +2,7 @@ package com.arekb.aqua.ui.screens.today
 
 import com.arekb.aqua.MainDispatcherRule
 import com.arekb.aqua.domain.model.DailyTotal
+import com.arekb.aqua.domain.model.DailyGoal
 import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.repository.HydrationRepository
@@ -100,6 +101,9 @@ private class FakeHydrationRepository : HydrationRepository {
     override fun observeDailyTotals(): Flow<List<DailyTotal>> = entriesByDate.map { (date, flow) ->
         DailyTotal(date, flow.value.sumOf(WaterIntake::amountMl))
     }.let { flowOfValue(it) }
+    override fun observeDailyGoals(): Flow<List<DailyGoal>> = flowOfValue(emptyList())
+    override fun observeEntriesBetween(startLocalDate: String, endLocalDate: String): Flow<List<WaterIntake>> =
+        flowOfValue(entriesByDate.filterKeys { it in startLocalDate..endLocalDate }.values.flatMap { it.value })
 
     override suspend fun saveSettings(settings: HydrationSettings) { this.settings.value = settings }
     override suspend fun addIntake(amountMl: Int, timestampMillis: Long, localDate: String): WaterIntake {
@@ -116,7 +120,8 @@ private class FakeHydrationRepository : HydrationRepository {
         entriesFor(intake.localDate).value = entriesFor(intake.localDate).value.filterNot { it.id == intake.id }
     }
     override suspend fun clearDate(localDate: String) { entriesFor(localDate).value = emptyList() }
+    override suspend fun saveDailyGoal(localDate: String, goalMl: Int) { /* Fake implementation */ }
 
     private fun entriesFor(date: String) = entriesByDate.getOrPut(date) { MutableStateFlow(emptyList()) }
-    private fun flowOfValue(value: List<DailyTotal>): Flow<List<DailyTotal>> = MutableStateFlow(value)
+    private fun <T> flowOfValue(value: List<T>): Flow<List<T>> = MutableStateFlow(value)
 }

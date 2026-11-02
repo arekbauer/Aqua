@@ -16,9 +16,16 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
 - `AquaDaoTest`
   - `entriesAreOrderedByTimeAndTotalsAreGroupedByDate`: verifies entries are filtered to the requested date and ordered newest-first, while daily totals are grouped and ordered by date.
   - `updatesAndDeletesChangeTheDailyTotal`: verifies updating an entry changes the stored daily total and deleting it removes the total.
+- `HistoryInsightsCalculatorTest`
+  - Verifies seven-day totals include no-log days, averages include zero-intake days, goal changes apply from their effective local date, and goal status distinguishes met, below, unavailable, no logs, and today in progress.
+  - Verifies the 30-day first-drink median and highest-volume time of day appear only after seven logged days, and the longest same-day gap is measured over the last seven completed days.
+- `HistoryScreenTest`
+  - Verifies summary metrics, no-log chart legend, daily goal statuses, pattern cards, insufficient-history messaging, and the empty daily log.
+- `AquaDaoTest` and `AquaDatabaseMigrationTest`
+  - Verify effective-dated goal history replacement, inclusive date-range entry queries, and the v1-to-v2 migration preserving existing entries while starting goal history on the migration date.
 - JaCoCo report for local JVM tests.
 
-The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings and History. The instrumented tests exercise the Today screen component and Room DAO directly; they do not yet run a complete Hilt-backed app journey.
+The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings. The instrumented tests exercise screen components, Room DAO behavior, and the database migration directly; they do not yet run a complete Hilt-backed app journey.
 
 ## Run locally
 

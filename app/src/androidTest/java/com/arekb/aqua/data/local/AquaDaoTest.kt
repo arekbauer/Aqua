@@ -49,4 +49,39 @@ class AquaDaoTest {
         dao.deleteEntry(id)
         assertEquals(emptyList<DailyTotalRow>(), dao.observeDailyTotals().first())
     }
+
+    @Test
+    fun dailyGoalHistoryStoresEffectiveDatesAndReplacesSameDayGoal() = runBlocking {
+        dao.saveDailyGoal(DailyGoalEntity("2026-10-29", 2_000))
+        dao.saveDailyGoal(DailyGoalEntity("2026-10-31", 2_500))
+        dao.saveDailyGoal(DailyGoalEntity("2026-10-31", 2_300))
+
+        assertEquals(
+            listOf(DailyGoalEntity("2026-10-29", 2_000), DailyGoalEntity("2026-10-31", 2_300)),
+            dao.observeDailyGoals().first()
+        )
+    }
+
+    @Test
+    fun savingSettingsAlsoRecordsThatDaysGoal() = runBlocking {
+        dao.saveSettingsAndGoal(
+            SettingsEntity(dailyGoalMl = 2_400),
+            DailyGoalEntity("2026-10-31", 2_400)
+        )
+
+        assertEquals(2_400, dao.getSettings()?.dailyGoalMl)
+        assertEquals(DailyGoalEntity("2026-10-31", 2_400), dao.observeDailyGoals().first().single())
+    }
+
+    @Test
+    fun entriesBetweenDatesAreInclusiveAndChronological() = runBlocking {
+        dao.insertEntry(IntakeEntity(amountMl = 100, timestamp = 3_000, localDate = "2026-10-31"))
+        dao.insertEntry(IntakeEntity(amountMl = 200, timestamp = 1_000, localDate = "2026-10-30"))
+        dao.insertEntry(IntakeEntity(amountMl = 300, timestamp = 2_000, localDate = "2026-11-01"))
+
+        val entries = dao.observeEntriesBetween("2026-10-30", "2026-10-31").first()
+
+        assertEquals(listOf("2026-10-30", "2026-10-31"), entries.map(IntakeEntity::localDate))
+        assertEquals(listOf(200, 100), entries.map(IntakeEntity::amountMl))
+    }
 }

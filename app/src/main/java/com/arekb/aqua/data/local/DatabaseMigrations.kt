@@ -1,8 +1,24 @@
 package com.arekb.aqua.data.local
 
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Add a versioned Migration here whenever AquaDatabase's schema changes. */
 internal object DatabaseMigrations {
-    val ALL: Array<Migration> = emptyArray()
+    val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `daily_goal_history` " +
+                    "(`effectiveLocalDate` TEXT NOT NULL, `goalMl` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`effectiveLocalDate`))"
+            )
+            // Existing history has no saved target. Record today's target as the first known value.
+            db.execSQL(
+                "INSERT OR IGNORE INTO `daily_goal_history` (`effectiveLocalDate`, `goalMl`) " +
+                    "SELECT date('now', 'localtime'), `dailyGoalMl` FROM `app_settings` WHERE `id` = 1"
+            )
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
 }

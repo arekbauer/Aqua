@@ -207,6 +207,20 @@ val Typography = Typography(
         fontSize = 22.sp,
         lineHeight = 28.sp
     ),
+    titleMediumEmphasized = TextStyle(
+        fontFamily = RobotoFlexDisplayRound,
+        fontWeight = FontWeight.Black,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmallEmphasized = TextStyle(
+        fontFamily = RobotoFlexDisplayRound,
+        fontWeight = FontWeight.Black,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
 
     // --- BODY (Reading)
     bodyLarge = TextStyle(

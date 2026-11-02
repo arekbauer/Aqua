@@ -9,6 +9,9 @@ plugins {
 
 android {
     namespace = "com.arekb.aqua"
+    sourceSets {
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
     compileSdk {
         version = release(37)
     }
