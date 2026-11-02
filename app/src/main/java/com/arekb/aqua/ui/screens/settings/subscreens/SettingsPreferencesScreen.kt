@@ -16,6 +16,7 @@ import com.arekb.aqua.domain.model.label
 import com.arekb.aqua.domain.model.toSystemMl
 import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.ui.components.AquaTopAppBar
+import com.arekb.aqua.ui.screens.settings.components.DailyGoalSetting
 import com.arekb.aqua.ui.screens.settings.components.SettingsCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,17 +30,20 @@ fun SettingsPreferencesScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     var unit by remember(settings.liquidUnit) { mutableStateOf(settings.liquidUnit) }
-    var goalText by remember(settings.dailyGoalMl, settings.liquidUnit) { mutableStateOf(settings.dailyGoalMl.toUserUnit(settings.liquidUnit).toString()) }
+    var goalValue by remember(settings.dailyGoalMl, settings.liquidUnit) { mutableFloatStateOf(settings.dailyGoalMl.toUserUnit(settings.liquidUnit).toFloat()) }
     var presetTexts by remember(settings.presetsMl, settings.liquidUnit) { mutableStateOf(settings.presetsMl.map { it.toUserUnit(settings.liquidUnit).toString() }) }
 
-    val goal = goalText.toIntOrNull()
+    val goal = goalValue.toInt()
     val presets = presetTexts.mapNotNull(String::toIntOrNull)
-    val valid = goal != null && goal > 0 && presets.size == 3 && presets.all { it > 0 }
+    val valid = goal > 0 && presets.size == 3 && presets.all { it > 0 }
     val unitLabel = unit.label()
+    
+    val sliderRange = if (unit == LiquidUnit.ML) 1000f..5000f else 35f..175f
+    val sliderStep = if (unit == LiquidUnit.ML) 100f else 5f
 
     fun handleUnitChange(newUnit: LiquidUnit) {
         if (newUnit != unit) {
-            goalText = goalText.toIntOrNull()?.toSystemMl(unit)?.toUserUnit(newUnit)?.toString() ?: ""
+            goalValue = goalValue.toInt().toSystemMl(unit).toUserUnit(newUnit).toFloat()
             presetTexts = presetTexts.map { it.toIntOrNull()?.toSystemMl(unit)?.toUserUnit(newUnit)?.toString() ?: "" }
             unit = newUnit
         }
@@ -60,15 +64,13 @@ fun SettingsPreferencesScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp)
         ) {
             item {
-                SettingsCard("Daily goal", "Your target for each day") {
-                    OutlinedTextField(
-                        value = goalText,
-                        onValueChange = { goalText = it.filter(Char::isDigit).take(5) },
-                        modifier = Modifier.fillMaxWidth(), label = { Text("Daily target") }, suffix = { Text(unitLabel) }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                DailyGoalSetting(
+                    value = goalValue,
+                    onValueChange = { goalValue = it },
+                    unitLabel = unitLabel,
+                    range = sliderRange,
+                    step = sliderStep
+                )
                 Spacer(Modifier.height(14.dp))
             }
 
@@ -113,7 +115,7 @@ fun SettingsPreferencesScreen(
             item {
                 Button(
                     onClick = {
-                        val sysGoal = goal!!.toSystemMl(unit)
+                        val sysGoal = goal.toSystemMl(unit)
                         val sysPresets = presets.map { it.toSystemMl(unit) }
                         onSave(settings.copy(dailyGoalMl = sysGoal, presetsMl = sysPresets, liquidUnit = unit))
                         onBack()

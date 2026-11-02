@@ -18,10 +18,67 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import kotlin.math.roundToInt
 
-import androidx.compose.ui.graphics.vector.ImageVector
+@Composable
+fun DailyGoalSetting(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    unitLabel: String,
+    modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Float> = 1000f..5000f,
+    step: Float = 100f
+) {
+    val sliderState = remember(range) { 
+        SliderState(value = value, trackRange = range)
+    }
+    
+    LaunchedEffect(value) {
+        if (sliderState.value != value) {
+            sliderState.value = value
+        }
+    }
+
+    SettingsCard("Daily goal", "Your target for each day") {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier
+        ) {
+            Text(
+                text = "${value.toInt()} $unitLabel",
+                style = MaterialTheme.typography.displaySmallEmphasized,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Slider(
+                state = sliderState,
+                onValueChange = { newValue -> 
+                    val snappedValue = (newValue / step).roundToInt() * step
+                    onValueChange(snappedValue)
+                }
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("${range.start.toInt()} $unitLabel", style = MaterialTheme.typography.bodySmall)
+                Text("${range.endInclusive.toInt()} $unitLabel", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
 
 @Composable
 fun SettingsCategoryItem(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
@@ -43,7 +100,7 @@ fun SettingsCategoryItem(title: String, subtitle: String, icon: ImageVector, onC
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMediumEmphasized)
                 Spacer(Modifier.height(2.dp))
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(
                 imageVector = Icons.Default.ChevronRight,
@@ -63,9 +120,9 @@ fun SettingsCard(title: String, subtitle: String, content: @Composable () -> Uni
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(title, style = MaterialTheme.typography.titleMediumEmphasized, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(2.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             content()
         }

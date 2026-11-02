@@ -138,6 +138,18 @@ val Typography = Typography(
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp
     ),
+    displayMediumEmphasized = TextStyle(
+        fontFamily = LargeHalfRoundHeadlines,
+        fontWeight = FontWeight.Black,
+        fontSize = 45.sp,
+        lineHeight = 52.sp
+    ),
+    displaySmallEmphasized = TextStyle(
+        fontFamily = LargeHalfRoundHeadlines,
+        fontWeight = FontWeight.Black,
+        fontSize = 36.sp,
+        lineHeight = 44.sp
+    ),
 
     // --- HEADLINES (Brand Personality) -> ROUNDED ---
     headlineLarge = TextStyle(
