@@ -66,7 +66,6 @@ import com.arekb.aqua.ui.navigation.AquaDestination
 import com.arekb.aqua.ui.navigation.rememberAquaNavigationState
 import com.arekb.aqua.ui.screens.today.TodayScreen
 import com.arekb.aqua.ui.screens.history.HistoryScreen
-import com.arekb.aqua.ui.screens.settings.SettingsScreen
 import com.arekb.aqua.ui.theme.AquaTheme
 import com.arekb.aqua.ui.screens.today.TodayViewModel
 import com.arekb.aqua.ui.screens.history.HistoryViewModel
@@ -104,8 +103,30 @@ fun AquaRoot() {
                         snackbarHostState = snackbarHostState
                     )
                     AquaDestination.HISTORY -> HistoryRoute(Modifier)
-                    AquaDestination.SETTINGS -> SettingsRoute(Modifier, snackbarHostState)
+                    AquaDestination.SETTINGS -> SettingsRoute(
+                        modifier = Modifier,
+                        navigateTo = navigationState::navigateTo
+                    )
                 }
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsPreferences> {
+                SettingsPreferencesRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsAppearance> {
+                SettingsAppearanceRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsDataManagement> {
+                SettingsDataManagementRoute(
+                    modifier = Modifier,
+                    snackbarHostState = snackbarHostState,
+                    onBack = navigationState::goBack
+                )
             }
         }
         val entries = navigationState.toDecoratedEntries(entryProvider)
@@ -249,19 +270,54 @@ private fun HistoryRoute(modifier: Modifier) {
 }
 
 @Composable
-private fun SettingsRoute(modifier: Modifier, snackbarHostState: SnackbarHostState) {
+private fun SettingsRoute(modifier: Modifier, navigateTo: (NavKey) -> Unit) {
+    com.arekb.aqua.ui.screens.settings.SettingsMainScreen(
+        modifier = modifier,
+        onNavigateToPreferences = { navigateTo(com.arekb.aqua.ui.navigation.SettingsPreferences) },
+        onNavigateToAppearance = { navigateTo(com.arekb.aqua.ui.navigation.SettingsAppearance) },
+        onNavigateToDataManagement = { navigateTo(com.arekb.aqua.ui.navigation.SettingsDataManagement) }
+    )
+}
+
+@Composable
+private fun SettingsPreferencesRoute(modifier: Modifier, onBack: () -> Unit) {
+    val viewModel: SettingsViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsPreferencesScreen(
+        settings = state.settings,
+        modifier = modifier,
+        onSave = viewModel::saveSettings,
+        onBack = onBack
+    )
+}
+
+@Composable
+private fun SettingsAppearanceRoute(modifier: Modifier, onBack: () -> Unit) {
+    val viewModel: SettingsViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsAppearanceScreen(
+        settings = state.settings,
+        modifier = modifier,
+        onSave = viewModel::saveSettings,
+        onBack = onBack
+    )
+}
+
+@Composable
+private fun SettingsDataManagementRoute(modifier: Modifier, snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showResetConfirmation by remember { mutableStateOf(false) }
     var showWipeConfirmation by remember { mutableStateOf(false) }
     UserMessageEffect(state.message, snackbarHostState, onUndo = {}, onMessageShown = viewModel::messageShown)
 
-    SettingsScreen(
-        settings = state.settings,
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsDataManagementScreen(
         modifier = modifier,
-        onSave = viewModel::saveSettings,
         onReset = { showResetConfirmation = true },
-        onWipeAllData = { showWipeConfirmation = true }
+        onWipeAllData = { showWipeConfirmation = true },
+        onBack = onBack
     )
 
     if (showWipeConfirmation) {
