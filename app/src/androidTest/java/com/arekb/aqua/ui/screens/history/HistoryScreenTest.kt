@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.arekb.aqua.domain.model.DayPeriod
@@ -50,7 +51,7 @@ class HistoryScreenTest {
 
         composeRule.onNodeWithText("1,250 ml").assertIsDisplayed()
         composeRule.onNodeWithText("2/6 days").assertIsDisplayed()
-        composeRule.onNodeWithText("No logs").assertIsDisplayed()
+        composeRule.onNodeWithText("Goal").assertIsDisplayed()
 
         composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Goal met"))
         composeRule.onNodeWithText("Goal met").assertIsDisplayed()
@@ -90,5 +91,42 @@ class HistoryScreenTest {
         composeRule.onNodeWithText("Insights appear after you have logs on 7 days in the last 30 days.").assertIsDisplayed()
         composeRule.onNodeWithText("Your history starts here").assertIsDisplayed()
         composeRule.onNodeWithText("Goal line unavailable for these dates").assertIsDisplayed()
+    }
+
+    @Test
+    fun clickingShowOlderEntriesLoadsMoreHistory() {
+        val today = LocalDate.parse("2026-10-31")
+        val days = (0 until 10).map { offset ->
+            val date = today.minusDays(offset.toLong())
+            HistoryDay(date.toString(), 1_500, 2_000, hasLogs = true)
+        }
+        val insights = HistoryInsights(
+            today = today.toString(),
+            week = emptyList(),
+            days = days,
+            averageCompletedDayMl = 1_500,
+            completedDays = 10,
+            goalMetDays = 0,
+            goalAvailableDays = 10,
+            patterns = HistoryPatternInsights()
+        )
+
+        composeRule.setContent {
+            AquaTheme(dynamicColor = false) {
+                HistoryScreen(HistoryUiState(isLoading = false, insights = insights))
+            }
+        }
+
+        // Initially shows only 5 days, so 2026-10-21 (10 days ago) should not be visible.
+        composeRule.onNodeWithText(today.minusDays(9).toString(), substring = true).assertDoesNotExist()
+
+        // Click "Show older entries"
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Show older entries"))
+        composeRule.onNodeWithText("Show older entries").performClick()
+
+        // 2026-10-22 (9 days ago) should now be displayed
+        val expectedDateText = today.minusDays(9).format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale.getDefault()))
+        composeRule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(expectedDateText))
+        composeRule.onNodeWithText(expectedDateText).assertIsDisplayed()
     }
 }
