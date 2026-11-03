@@ -1,5 +1,6 @@
 package com.arekb.aqua.ui.screens.settings.subscreens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,12 +20,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import com.arekb.aqua.ui.components.AquaTopAppBar
 import com.arekb.aqua.ui.screens.settings.components.SettingsCard
 import com.arekb.aqua.ui.theme.AquaTheme
@@ -41,6 +45,7 @@ fun SettingsAboutScreen(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     val versionName = rememberVersionName(context)
+    val appIconBitmap = rememberAppIconBitmap(context)
     var showLicensesSheet by remember { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
@@ -71,19 +76,29 @@ fun SettingsAboutScreen(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.WaterDrop,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
+                        if (appIconBitmap != null) {
+                            Image(
+                                bitmap = appIconBitmap,
+                                contentDescription = "Aqua App Icon",
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.WaterDrop,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
                         }
 
                         Spacer(Modifier.height(12.dp))
@@ -310,6 +325,18 @@ private fun rememberVersionName(context: android.content.Context): String {
             packageInfo.versionName ?: "1.0"
         } catch (_: Exception) {
             "1.0"
+        }
+    }
+}
+
+@Composable
+private fun rememberAppIconBitmap(context: android.content.Context): ImageBitmap? {
+    return remember(context) {
+        try {
+            val drawable = context.packageManager.getApplicationIcon(context.packageName)
+            drawable.toBitmap(width = 128, height = 128).asImageBitmap()
+        } catch (_: Exception) {
+            null
         }
     }
 }
