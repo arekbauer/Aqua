@@ -36,4 +36,8 @@ class ResetDailyIntakeUseCase(
     )
 }
 
+class ClearAllHistoryUseCase(private val repository: HydrationRepository) {
+    suspend operator fun invoke() = repository.clearAllHistory()
+}
+
 

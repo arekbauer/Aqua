@@ -86,6 +86,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.arekb.aqua.ui.theme.AquaTheme
 import androidx.graphics.shapes.Morph
 import com.arekb.aqua.domain.model.WaterIntake
+import com.arekb.aqua.domain.model.LiquidUnit
+import com.arekb.aqua.domain.model.label
+import com.arekb.aqua.domain.model.toSystemMl
+import com.arekb.aqua.domain.model.toUserUnit
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -191,6 +195,7 @@ fun MinimalVerticalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier
 fun CookieReservoirProgressGauge(
     currentMl: Int,
     goalMl: Int,
+    unit: LiquidUnit,
     modifier: Modifier = Modifier
 ) {
     val fraction by animateFloatAsState(
@@ -245,7 +250,8 @@ fun CookieReservoirProgressGauge(
             shape = reservoirShape
         )
         CookieReservoirReadout(
-            currentMl = currentMl
+            currentMl = currentMl,
+            unit = unit
         )
     }
 }
@@ -309,19 +315,22 @@ private fun CookieReservoirLiquid(
 
 @Composable
 private fun CookieReservoirReadout(
-    currentMl: Int
+    currentMl: Int,
+    unit: LiquidUnit
 ) {
     val colors = MaterialTheme.colorScheme
+    val currentVal = currentMl.toUserUnit(unit)
+    val unitLabel = unit.label()
     Column(Modifier.padding(horizontal = 42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            currentMl.toString(),
+            currentVal.toString(),
             style = MaterialTheme.typography.displayLargeEmphasized,
             color = colors.onSurface,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             softWrap = false
         )
-        Text("ml today", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+        Text("$unitLabel today", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
     }
 }
 
@@ -330,7 +339,7 @@ private fun CookieReservoirReadout(
 private fun CookieReservoirProgressGaugePreview() {
     AquaTheme {
         Surface {
-            CookieReservoirProgressGauge(currentMl = 1_250, goalMl = 2_000)
+            CookieReservoirProgressGauge(currentMl = 1_250, goalMl = 2_000, unit = LiquidUnit.ML)
         }
     }
 }
@@ -356,9 +365,13 @@ private fun MinimalVerticalProgressGaugePreview() {
 }
 
 @Composable
-fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
+fun DrinkPickerBottomSheet(
+    onAdd: (Int) -> Unit,
+    unit: LiquidUnit
+) {
     var customAmount by rememberSaveable { mutableStateOf("") }
-    val customMl = customAmount.toIntOrNull()?.takeIf { it > 0 }
+    val customVal = customAmount.toIntOrNull()?.takeIf { it > 0 }
+    val unitLabel = unit.label()
     val servings = listOf(
         ServingOption("Juice Box", 200, Icons.Filled.LocalDrink),
         ServingOption("Glass", 250, Icons.Filled.WaterDrop),
@@ -379,6 +392,7 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
         servings.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { serving ->
+                    val servingVal = serving.amountMl.toUserUnit(unit)
                     FilledTonalButton(
                         onClick = { onAdd(serving.amountMl) },
                         modifier = Modifier.weight(1f).aspectRatio(1.25f),
@@ -392,7 +406,7 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
                                 maxLines = 3,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
                             )
-                            Text("${serving.amountMl} ml", style = MaterialTheme.typography.labelLargeEmphasized)
+                            Text("$servingVal $unitLabel", style = MaterialTheme.typography.labelLargeEmphasized)
                         }
                     }
                 }
@@ -405,13 +419,13 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
                 value = customAmount,
                 onValueChange = { customAmount = it.filter(Char::isDigit).take(5) },
                 modifier = Modifier.weight(1f),
-                label = { Text("Amount in ml") },
+                label = { Text("Amount in $unitLabel") },
                 shape = RoundedCornerShape(100.dp),
-                suffix = { Text("ml") },
+                suffix = { Text(unitLabel) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
             )
-            OutlinedButton(onClick = { customMl?.let(onAdd) }, enabled = customMl != null, modifier = Modifier.height(56.dp)) {
+            OutlinedButton(onClick = { customVal?.let { onAdd(it.toSystemMl(unit)) } }, enabled = customVal != null, modifier = Modifier.height(56.dp)) {
                 Text("Add")
             }
         }
@@ -421,6 +435,7 @@ fun DrinkPickerBottomSheet(onAdd: (Int) -> Unit) {
 @Composable
 fun IntakeLogRow(
     entry: WaterIntake,
+    unit: LiquidUnit,
     modifier: Modifier = Modifier,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -429,6 +444,8 @@ fun IntakeLogRow(
         Instant.ofEpochMilli(entry.timestampMillis).atZone(ZoneId.systemDefault())
             .format(DateTimeFormatter.ofPattern("h:mm a"))
     }
+    val entryVal = entry.amountMl.toUserUnit(unit)
+    val unitLabel = unit.label()
     Card(
         modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
         shape = RoundedCornerShape(24.dp),
@@ -438,13 +455,13 @@ fun IntakeLogRow(
             Modifier.fillMaxWidth().padding(start = 18.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${entry.amountMl} ml", style = MaterialTheme.typography.titleMediumEmphasized, color = MaterialTheme.colorScheme.primary)
+            Text("$entryVal $unitLabel", style = MaterialTheme.typography.titleMediumEmphasized, color = MaterialTheme.colorScheme.primary)
             Text("$time", modifier = Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             IconButton(onClick = onEdit) {
-                Icon(Icons.Outlined.Edit, contentDescription = "Edit ${entry.amountMl} ml log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Outlined.Edit, contentDescription = "Edit $entryVal $unitLabel log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Outlined.DeleteOutline, contentDescription = "Delete ${entry.amountMl} ml log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Outlined.DeleteOutline, contentDescription = "Delete $entryVal $unitLabel log", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

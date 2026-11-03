@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -34,16 +35,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import com.arekb.aqua.R
+import com.arekb.aqua.domain.model.LiquidUnit
+import com.arekb.aqua.domain.model.label
+import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.ui.theme.AquaTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun QuickAddButtonGroup(
     presetsMl: List<Int>,
+    unit: LiquidUnit,
     modifier: Modifier = Modifier,
     onAdd: (Int) -> Unit
 ) {
     val presets = presetsMl.take(3)
+    val unitLabel = unit.label()
     val interactionSources = remember(presets.size) {
         List(presets.size) { MutableInteractionSource() }
     }
@@ -96,6 +102,7 @@ fun QuickAddButtonGroup(
                             pressedShape = ButtonGroupDefaults.connectedMiddleButtonPressShape
                         )
                     }
+                    val amountVal = amountMl.toUserUnit(unit)
                     Button(
                         onClick = { onAdd(amountMl) },
                         shapes = buttonShapes,
@@ -111,8 +118,9 @@ fun QuickAddButtonGroup(
                                 interactionSource = interactionSources[index],
                                 compressionLimit = contentPadding.calculateEndPadding(layoutDirection)
                             )
+                            .testTag("QuickAddButton_$amountVal")
                             .semantics {
-                                contentDescription = "Add $amountMl millilitres of water"
+                                contentDescription = "Add $amountVal $unitLabel of water"
                             }
                             .height(92.dp)
                     ) {
@@ -127,7 +135,7 @@ fun QuickAddButtonGroup(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "$amountMl ml",
+                                text = "$amountVal $unitLabel",
                                 style = MaterialTheme.typography.labelLargeEmphasized,
                                 maxLines = 1,
                                 softWrap = false,
@@ -137,11 +145,15 @@ fun QuickAddButtonGroup(
                     }
                 },
                 menuContent = {
+                    val amountVal = amountMl.toUserUnit(unit)
                     DropdownMenuItem(
                         leadingIcon = { Icon(painter = painterResource(buttonIcon), contentDescription = null) },
-                        text = { Text("$amountMl ml") },
+                        text = { Text("$amountVal $unitLabel") },
                         onClick = { onAdd(amountMl) },
-                        interactionSource = interactionSources[index]
+                        interactionSource = interactionSources[index],
+                        modifier = Modifier.semantics {
+                            contentDescription = "Add $amountVal $unitLabel of water"
+                        }
                     )
                 }
             )
@@ -155,6 +167,7 @@ private fun QuickAddButtonGroupPreview() {
     AquaTheme {
         QuickAddButtonGroup(
             presetsMl = listOf(200, 350, 500),
+            unit = LiquidUnit.ML,
             modifier = Modifier.fillMaxWidth(),
             onAdd = {}
         )

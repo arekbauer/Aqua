@@ -45,6 +45,10 @@ class AquaNavigationState internal constructor(
     fun navigateToTopLevel(destination: AquaDestination) {
         topLevelRouteState.value = destination
     }
+    
+    fun navigateTo(destination: NavKey) {
+        currentBackStack.add(destination)
+    }
 
     fun goBack() {
         if (currentBackStack.size > 1) {

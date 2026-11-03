@@ -4,9 +4,11 @@ import com.arekb.aqua.data.local.AquaDao
 import com.arekb.aqua.data.local.DailyGoalEntity
 import com.arekb.aqua.data.local.IntakeEntity
 import com.arekb.aqua.data.local.SettingsEntity
+import com.arekb.aqua.domain.model.AppTheme
 import com.arekb.aqua.domain.model.DailyTotal
 import com.arekb.aqua.domain.model.DailyGoal
 import com.arekb.aqua.domain.model.HydrationSettings
+import com.arekb.aqua.domain.model.LiquidUnit
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.repository.HydrationRepository
 import javax.inject.Inject
@@ -57,9 +59,35 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         dao.saveDailyGoal(DailyGoalEntity(localDate, goalMl))
     }
 
+    override suspend fun clearAllHistory() {
+        dao.clearAllHistory()
+        ensureDailyGoalForToday()
+    }
+
+    override suspend fun getAllEntries(): List<WaterIntake> =
+        dao.getAllEntries().map { it.toDomain() }
+
+    override suspend fun getAllDailyGoals(): List<DailyGoal> =
+        dao.getAllDailyGoals().map { DailyGoal(it.effectiveLocalDate, it.goalMl) }
+
+    override suspend fun restoreData(
+        settings: HydrationSettings?,
+        dailyGoals: List<DailyGoal>,
+        entries: List<WaterIntake>
+    ) {
+        val settingsEntity = settings?.toEntity()
+        val goalEntities = dailyGoals.map { DailyGoalEntity(it.effectiveLocalDate, it.goalMl) }
+        val intakeEntities = entries.map { IntakeEntity(id = it.id, amountMl = it.amountMl, timestamp = it.timestampMillis, localDate = it.localDate) }
+        dao.restoreAllData(settingsEntity, goalEntities, intakeEntities)
+        ensureDailyGoalForToday()
+    }
+
     private fun SettingsEntity.toDomain() = HydrationSettings(
         dailyGoalMl = dailyGoalMl,
-        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl)
+        presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl),
+        liquidUnit = try { LiquidUnit.valueOf(liquidUnit) } catch (e: Exception) { LiquidUnit.ML },
+        appTheme = try { AppTheme.valueOf(appTheme) } catch (e: Exception) { AppTheme.SYSTEM },
+        isDynamicColorEnabled = isDynamicColorEnabled
     )
 
     private fun HydrationSettings.toEntity() = SettingsEntity(
@@ -68,7 +96,10 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         presetTwoMl = presetsMl[1],
         presetThreeMl = presetsMl[2],
         // Keep the legacy Room column populated so the database schema stays compatible.
-        presetFourMl = 750
+        presetFourMl = 750,
+        liquidUnit = liquidUnit.name,
+        appTheme = appTheme.name,
+        isDynamicColorEnabled = isDynamicColorEnabled
     )
 
     private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate)

@@ -1,5 +1,8 @@
 package com.arekb.aqua.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
@@ -45,7 +48,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import java.time.LocalDate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -66,11 +71,13 @@ import com.arekb.aqua.ui.navigation.AquaDestination
 import com.arekb.aqua.ui.navigation.rememberAquaNavigationState
 import com.arekb.aqua.ui.screens.today.TodayScreen
 import com.arekb.aqua.ui.screens.history.HistoryScreen
-import com.arekb.aqua.ui.screens.settings.SettingsScreen
 import com.arekb.aqua.ui.theme.AquaTheme
 import com.arekb.aqua.ui.screens.today.TodayViewModel
 import com.arekb.aqua.ui.screens.history.HistoryViewModel
 import com.arekb.aqua.ui.screens.settings.SettingsViewModel
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.arekb.aqua.domain.model.AppTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -79,7 +86,17 @@ import com.arekb.aqua.ui.screens.settings.SettingsViewModel
 
 @Composable
 fun AquaRoot() {
-    AquaTheme {
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val appTheme = settingsState.settings.appTheme
+    val dynamicColor = settingsState.settings.isDynamicColorEnabled
+    val darkTheme = when (appTheme) {
+        AppTheme.SYSTEM -> isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+    }
+
+    AquaTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
         val navigationState = rememberAquaNavigationState()
         val snackbarHostState = remember { SnackbarHostState() }
         val selectedDestination = navigationState.topLevelRoute
@@ -92,8 +109,36 @@ fun AquaRoot() {
                         snackbarHostState = snackbarHostState
                     )
                     AquaDestination.HISTORY -> HistoryRoute(Modifier)
-                    AquaDestination.SETTINGS -> SettingsRoute(Modifier, snackbarHostState)
+                    AquaDestination.SETTINGS -> SettingsRoute(
+                        modifier = Modifier,
+                        navigateTo = navigationState::navigateTo
+                    )
                 }
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsPreferences> {
+                SettingsPreferencesRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsAppearance> {
+                SettingsAppearanceRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsDataManagement> {
+                SettingsDataManagementRoute(
+                    modifier = Modifier,
+                    snackbarHostState = snackbarHostState,
+                    onBack = navigationState::goBack
+                )
+            }
+            entry<com.arekb.aqua.ui.navigation.SettingsAbout> {
+                SettingsAboutRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
             }
         }
         val entries = navigationState.toDecoratedEntries(entryProvider)
@@ -237,32 +282,112 @@ private fun HistoryRoute(modifier: Modifier) {
 }
 
 @Composable
-private fun SettingsRoute(modifier: Modifier, snackbarHostState: SnackbarHostState) {
+private fun SettingsRoute(modifier: Modifier, navigateTo: (NavKey) -> Unit) {
+    com.arekb.aqua.ui.screens.settings.SettingsMainScreen(
+        modifier = modifier,
+        onNavigateToPreferences = { navigateTo(com.arekb.aqua.ui.navigation.SettingsPreferences) },
+        onNavigateToAppearance = { navigateTo(com.arekb.aqua.ui.navigation.SettingsAppearance) },
+        onNavigateToDataManagement = { navigateTo(com.arekb.aqua.ui.navigation.SettingsDataManagement) },
+        onNavigateToAbout = { navigateTo(com.arekb.aqua.ui.navigation.SettingsAbout) }
+    )
+}
+
+@Composable
+private fun SettingsAboutRoute(modifier: Modifier, onBack: () -> Unit) {
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsAboutScreen(
+        modifier = modifier,
+        onBack = onBack
+    )
+}
+
+@Composable
+private fun SettingsPreferencesRoute(modifier: Modifier, onBack: () -> Unit) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showResetConfirmation by remember { mutableStateOf(false) }
-    UserMessageEffect(state.message, snackbarHostState, onUndo = {}, onMessageShown = viewModel::messageShown)
-
-    SettingsScreen(
+    
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsPreferencesScreen(
         settings = state.settings,
         modifier = modifier,
         onSave = viewModel::saveSettings,
-        onReset = { showResetConfirmation = true }
+        onBack = onBack
+    )
+}
+
+@Composable
+private fun SettingsAppearanceRoute(modifier: Modifier, onBack: () -> Unit) {
+    val viewModel: SettingsViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsAppearanceScreen(
+        settings = state.settings,
+        modifier = modifier,
+        onSave = viewModel::saveSettings,
+        onBack = onBack
+    )
+}
+
+@Composable
+private fun SettingsDataManagementRoute(modifier: Modifier, snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
+    val viewModel: SettingsViewModel = hiltViewModel()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var showWipeConfirmation by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { viewModel.exportData(context.contentResolver, it) }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            pendingImportUri = uri
+        }
+    }
+
+    UserMessageEffect(state.message, snackbarHostState, onUndo = {}, onMessageShown = viewModel::messageShown)
+
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsDataManagementScreen(
+        modifier = modifier,
+        onExportData = { exportLauncher.launch("aqua_backup_${LocalDate.now()}.json") },
+        onImportData = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+        onWipeAllData = { showWipeConfirmation = true },
+        onBack = onBack
     )
 
-    if (showResetConfirmation) {
+    if (showWipeConfirmation) {
         AlertDialog(
-            onDismissRequest = { showResetConfirmation = false },
-            title = { Text("Reset today’s total?") },
-            text = { Text("All of today’s entries will be removed. Past days will stay in your history.") },
+            onDismissRequest = { showWipeConfirmation = false },
+            title = { Text("Wipe all history?") },
+            text = { Text("This will permanently delete all your hydration records and settings. This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.resetToday()
-                    showResetConfirmation = false
-                }) { Text("Reset today") }
+                    viewModel.wipeAllData()
+                    showWipeConfirmation = false
+                }) { Text("Wipe") }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirmation = false }) { Text("Cancel") }
+                TextButton(onClick = { showWipeConfirmation = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    pendingImportUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingImportUri = null },
+            title = { Text("Import JSON Backup?") },
+            text = { Text("Importing this backup will replace your current history and settings with the data from the backup file. Continue?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.importData(context.contentResolver, uri)
+                    pendingImportUri = null
+                }) { Text("Import") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImportUri = null }) { Text("Cancel") }
             }
         )
     }

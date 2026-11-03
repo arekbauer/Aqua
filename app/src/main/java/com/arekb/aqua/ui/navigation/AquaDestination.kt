@@ -9,3 +9,15 @@ enum class AquaDestination : NavKey {
     HISTORY,
     SETTINGS
 }
+
+@Serializable
+data object SettingsPreferences : NavKey
+
+@Serializable
+data object SettingsAppearance : NavKey
+
+@Serializable
+data object SettingsDataManagement : NavKey
+
+@Serializable
+data object SettingsAbout : NavKey

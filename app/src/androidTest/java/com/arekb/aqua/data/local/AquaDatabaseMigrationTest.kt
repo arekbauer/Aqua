@@ -46,6 +46,27 @@ class AquaDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migration3To4AddsIsDynamicColorEnabledColumn() {
+        helper.createDatabase(TEST_DATABASE, 3).apply {
+            execSQL("INSERT INTO app_settings (id, dailyGoalMl, presetOneMl, presetTwoMl, presetThreeMl, presetFourMl, liquidUnit, appTheme) VALUES (1, 2000, 200, 350, 500, 750, 'ML', 'SYSTEM')")
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DATABASE,
+            4,
+            true,
+            DatabaseMigrations.MIGRATION_3_4
+        )
+        migrated.query("SELECT isDynamicColorEnabled FROM app_settings WHERE id = 1").use { cursor ->
+            assertEquals(1, cursor.count)
+            cursor.moveToFirst()
+            assertEquals(1, cursor.getInt(0))
+        }
+        migrated.close()
+    }
+
     private companion object {
         const val TEST_DATABASE = "aqua-migration-test"
     }

@@ -1,116 +1,88 @@
 package com.arekb.aqua.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.arekb.aqua.domain.model.HydrationSettings
-import com.arekb.aqua.ui.theme.AquaTheme
+import com.arekb.aqua.ui.components.AquaTopAppBar
+import com.arekb.aqua.ui.screens.settings.components.SettingsCategoryItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    settings: HydrationSettings,
-    modifier: Modifier,
-    onSave: (HydrationSettings) -> Unit,
-    onReset: () -> Unit
+fun SettingsMainScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToPreferences: () -> Unit,
+    onNavigateToAppearance: () -> Unit,
+    onNavigateToDataManagement: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
-    var goalText by remember(settings.dailyGoalMl) { mutableStateOf(settings.dailyGoalMl.toString()) }
-    var presetTexts by remember(settings.presetsMl) { mutableStateOf(settings.presetsMl.map { it.toString() }) }
-    val goal = goalText.toIntOrNull()
-    val presets = presetTexts.mapNotNull(String::toIntOrNull)
-    val valid = goal != null && goal > 0 && presets.size == 3 && presets.all { it > 0 }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 112.dp)) {
-        Spacer(Modifier.height(24.dp))
-        Text("Make it yours", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Set a goal that fits your day.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(24.dp))
-        SettingsCard("Daily goal", "Your target for each day") {
-            OutlinedTextField(
-                value = goalText,
-                onValueChange = { goalText = it.filter(Char::isDigit).take(5) },
-                modifier = Modifier.fillMaxWidth(), label = { Text("Daily target") }, suffix = { Text("ml") }, singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    Scaffold(
+        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            AquaTopAppBar(
+                title = "Settings",
+                scrollBehavior = scrollBehavior
             )
-        }
-        Spacer(Modifier.height(14.dp))
-        SettingsCard("Quick add", "Choose three amounts for your buttons") {
-            presetTexts.forEachIndexed { index, value ->
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { updated -> presetTexts = presetTexts.toMutableList().also { it[index] = updated.filter(Char::isDigit).take(5) } },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp),
-                    label = { Text("Preset ${index + 1}") }, suffix = { Text("ml") }, singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        },
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp)
+        ) {
+            item {
+                SettingsCategoryItem(
+                    title = "Preferences",
+                    subtitle = "Daily goal, quick add presets, and units",
+                    icon = Icons.Outlined.WaterDrop,
+                    onClick = onNavigateToPreferences
                 )
+                Spacer(Modifier.height(14.dp))
+            }
+
+            item {
+                SettingsCategoryItem(
+                    title = "Appearance",
+                    subtitle = "Light and dark theme",
+                    icon = Icons.Outlined.Palette,
+                    onClick = onNavigateToAppearance
+                )
+                Spacer(Modifier.height(14.dp))
+            }
+
+            item {
+                SettingsCategoryItem(
+                    title = "Data Management",
+                    subtitle = "Manage your history",
+                    icon = Icons.Outlined.Storage,
+                    onClick = onNavigateToDataManagement
+                )
+                Spacer(Modifier.height(14.dp))
+            }
+
+            item {
+                SettingsCategoryItem(
+                    title = "About",
+                    subtitle = "App version, developer info, and open source links",
+                    icon = Icons.Outlined.Info,
+                    onClick = onNavigateToAbout
+                )
+                Spacer(Modifier.height(14.dp))
             }
         }
-        Spacer(Modifier.height(14.dp))
-        Button(
-            onClick = {
-                onSave(HydrationSettings(dailyGoalMl = goal!!, presetsMl = presets))
-            },
-            enabled = valid, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(20.dp)
-        ) { Text("Save changes") }
-        Spacer(Modifier.height(24.dp))
-        SettingsCard("A fresh start", "Remove today’s entries and keep your past days") {
-            OutlinedButton(onClick = onReset, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp)) {
-                Text("Reset today’s total")
-            }
-        }
-        Spacer(Modifier.height(24.dp))
     }
 }
-
-@Preview(name = "Settings · light", showBackground = true)
-@Composable
-private fun SettingsScreenPreview() {
-    AquaTheme(darkTheme = false) {
-        SettingsScreen(
-            settings = HydrationSettings(),
-            modifier = Modifier,
-            onSave = {},
-            onReset = {}
-        )
-    }
-}
-
-@Preview(name = "Settings · dark", showBackground = true)
-@Composable
-private fun SettingsScreenDarkPreview() {
-    AquaTheme(darkTheme = true) {
-        SettingsScreen(
-            settings = HydrationSettings(dailyGoalMl = 2_500, presetsMl = listOf(250, 400, 600)),
-            modifier = Modifier,
-            onSave = {},
-            onReset = {}
-        )
-    }
-}
-
-@Composable
-private fun SettingsCard(title: String, subtitle: String, content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-    ) {
-        Column(Modifier.padding(18.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(2.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(14.dp))
-            content()
-        }
-    }
-}
-
-
-

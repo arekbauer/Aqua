@@ -17,5 +17,9 @@ interface HydrationRepository {
     suspend fun updateIntakeAmount(intakeId: Long, amountMl: Int)
     suspend fun undoIntake(intake: WaterIntake)
     suspend fun clearDate(localDate: String)
+    suspend fun clearAllHistory()
     suspend fun saveDailyGoal(localDate: String, goalMl: Int)
+    suspend fun getAllEntries(): List<WaterIntake>
+    suspend fun getAllDailyGoals(): List<DailyGoal>
+    suspend fun restoreData(settings: HydrationSettings?, dailyGoals: List<DailyGoal>, entries: List<WaterIntake>)
 }

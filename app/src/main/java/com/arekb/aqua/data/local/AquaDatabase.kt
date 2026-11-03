@@ -25,7 +25,10 @@ data class SettingsEntity(
     val presetOneMl: Int = 200,
     val presetTwoMl: Int = 350,
     val presetThreeMl: Int = 500,
-    val presetFourMl: Int = 750
+    val presetFourMl: Int = 750,
+    val liquidUnit: String = "ML",
+    val appTheme: String = "SYSTEM",
+    val isDynamicColorEnabled: Boolean = true
 )
 
 @Entity(tableName = "daily_goal_history")
@@ -85,9 +88,48 @@ interface AquaDao {
 
     @Query("SELECT localDate, SUM(amountMl) AS totalMl FROM intake_entries GROUP BY localDate ORDER BY localDate DESC")
     fun observeDailyTotals(): Flow<List<DailyTotalRow>>
+
+    @Query("DELETE FROM intake_entries")
+    suspend fun clearAllEntries()
+
+    @Query("DELETE FROM daily_goal_history")
+    suspend fun clearAllDailyGoals()
+
+    @Query("SELECT * FROM intake_entries ORDER BY timestamp ASC")
+    suspend fun getAllEntries(): List<IntakeEntity>
+
+    @Query("SELECT * FROM daily_goal_history ORDER BY effectiveLocalDate ASC")
+    suspend fun getAllDailyGoals(): List<DailyGoalEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEntries(entries: List<IntakeEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDailyGoals(goals: List<DailyGoalEntity>)
+
+    @androidx.room.Transaction
+    suspend fun clearAllHistory() {
+        clearAllEntries()
+        clearAllDailyGoals()
+    }
+
+    @androidx.room.Transaction
+    suspend fun restoreAllData(settings: SettingsEntity?, goals: List<DailyGoalEntity>, entries: List<IntakeEntity>) {
+        clearAllEntries()
+        clearAllDailyGoals()
+        if (settings != null) {
+            saveSettings(settings)
+        }
+        if (goals.isNotEmpty()) {
+            insertDailyGoals(goals)
+        }
+        if (entries.isNotEmpty()) {
+            insertEntries(entries)
+        }
+    }
 }
 
-@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 2, exportSchema = true)
+@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 4, exportSchema = true)
 abstract class AquaDatabase : RoomDatabase() {
     abstract fun aquaDao(): AquaDao
 }

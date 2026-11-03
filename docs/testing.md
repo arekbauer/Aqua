@@ -23,9 +23,29 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
   - Verifies summary metrics, no-log chart legend, daily goal statuses, pattern cards, insufficient-history messaging, and the empty daily log.
 - `AquaDaoTest` and `AquaDatabaseMigrationTest`
   - Verify effective-dated goal history replacement, inclusive date-range entry queries, and the v1-to-v2 migration preserving existing entries while starting goal history on the migration date.
+- `BackupDataTest`
+  - `exportAndImportDataRestoresFullBackup`: verifies gathering settings, goal history, and water intake records into an `AquaBackupData` structure, serializing to JSON, and restoring the complete backup into a fresh repository instance.
+- `SettingsViewModelTest`
+  - `exportImportAndWipeActionsUpdateUiStateAndMessage`: verifies exporting data, wiping all history, and importing data update the ViewModel state and emit appropriate user feedback messages.
+- `SettingsScreenTest`
+  - `mainScreenShowsAllCategoriesAndNavigates`: verifies all categories are displayed and their navigation callbacks are invoked when clicked.
+  - `appearanceScreenThemeSelectionUpdatesState`: verifies selecting a theme invokes the callback with the chosen theme.
+  - `preferencesScreenPresetChangeTriggersSave`: verifies modifying a quick add preset triggers a save via `LaunchedEffect`.
+- `AquaAppIntegrationTest`
+  - `changingGoalAndPresetsUpdatesTodayScreen`: modifies quick add presets in settings and verifies they update on the Today screen.
+  - `changingUnitsUpdatesTodayScreen`: switches liquid units from ml to oz in settings and verifies the Today screen goal and quick add calculations reflect oz.
+  - `loggingWaterAppearsInHistory`: logs water intake on the Today screen and navigates to History to verify it appears in the daily log.
+- `HydrationUseCasesTest`
+  - Verifies `AddWaterUseCase` validation and timestamp calculation, `SaveHydrationSettingsUseCase` goal/preset validations, `ResetDailyIntakeUseCase`, and `ClearAllHistoryUseCase`.
+- `AquaNavigationStateTest`
+  - Verifies multi-backstack state logic, sub-destination navigation, and returning to the Today tab when popping top-level destinations.
+- `SettingsDataManagementScreenTest`
+  - Verifies UI rendering of backup/restore and danger zone sections, and clicking export, import, wipe, and back buttons.
+- `SettingsAboutScreenTest`
+  - Verifies UI rendering of app info, developer details, open-source license info, and opening the licenses bottom sheet.
 - JaCoCo report for local JVM tests.
 
-The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings. The instrumented tests exercise screen components, Room DAO behavior, and the database migration directly; they do not yet run a complete Hilt-backed app journey.
+The current suite does not include screenshot baselines. The instrumented tests exercise screen components, Room DAO behavior, database migrations, and Hilt-backed end-to-end user flows.
 
 ## Run locally
 
