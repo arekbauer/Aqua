@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.IconButton
@@ -180,6 +181,7 @@ fun QuickAddSettingsGrid(
                     BasicTextField(
                         value = textValue,
                         onValueChange = { onPresetChange(index, it.filter(Char::isDigit).take(4)) },
+                        modifier = Modifier.testTag("PresetInput_$index"),
                         textStyle = MaterialTheme.typography.titleMediumEmphasized.copy(
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center

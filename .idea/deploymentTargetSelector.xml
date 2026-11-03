@@ -24,17 +24,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="Variant 2: Activity Rings - RingsChartPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-11-01T21:56:29.892553200Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Resizable_Experimental.avd" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="showsWeeklySummaryNoLogMarkerDailyGoalStatusAndPatterns()">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-11-01T22:43:13.855332400Z">
@@ -58,6 +47,17 @@
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="2. Slider Style - DailyGoalStyle2SliderPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-11-01T22:43:13.855332400Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\user\.android\avd\Pixel_9_Pro_XL.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="loggingWaterAppearsInHistory()">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-11-01T22:43:13.855332400Z">
           <Target type="DEFAULT_BOOT">

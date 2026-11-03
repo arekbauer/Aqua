@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -117,6 +118,7 @@ fun QuickAddButtonGroup(
                                 interactionSource = interactionSources[index],
                                 compressionLimit = contentPadding.calculateEndPadding(layoutDirection)
                             )
+                            .testTag("QuickAddButton_$amountVal")
                             .semantics {
                                 contentDescription = "Add $amountVal $unitLabel of water"
                             }
@@ -148,7 +150,10 @@ fun QuickAddButtonGroup(
                         leadingIcon = { Icon(painter = painterResource(buttonIcon), contentDescription = null) },
                         text = { Text("$amountVal $unitLabel") },
                         onClick = { onAdd(amountMl) },
-                        interactionSource = interactionSources[index]
+                        interactionSource = interactionSources[index],
+                        modifier = Modifier.semantics {
+                            contentDescription = "Add $amountVal $unitLabel of water"
+                        }
                     )
                 }
             )

@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.arekb.aqua.domain.model.HydrationSettings
@@ -30,8 +31,8 @@ fun SettingsPreferencesScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     var unit by remember(settings.liquidUnit) { mutableStateOf(settings.liquidUnit) }
-    var goalValue by remember(settings.dailyGoalMl, settings.liquidUnit) { mutableFloatStateOf(settings.dailyGoalMl.toUserUnit(settings.liquidUnit).toFloat()) }
-    var presetTexts by remember(settings.presetsMl, settings.liquidUnit) { mutableStateOf(settings.presetsMl.map { it.toUserUnit(settings.liquidUnit).toString() }) }
+    var goalValue by remember(unit) { mutableFloatStateOf(settings.dailyGoalMl.toUserUnit(unit).toFloat()) }
+    var presetTexts by remember(unit) { mutableStateOf(settings.presetsMl.map { it.toUserUnit(unit).toString() }) }
 
     val goal = goalValue.toInt()
     val presets = presetTexts.mapNotNull(String::toIntOrNull)
@@ -43,8 +44,17 @@ fun SettingsPreferencesScreen(
 
     LaunchedEffect(unit, goalValue, presetTexts) {
         if (valid) {
-            val sysGoal = goal.toSystemMl(unit)
-            val sysPresets = presets.map { it.toSystemMl(unit) }
+            val sysGoal = if (goal == settings.dailyGoalMl.toUserUnit(unit)) {
+                settings.dailyGoalMl
+            } else {
+                goal.toSystemMl(unit)
+            }
+            val currentPresetsUser = settings.presetsMl.map { it.toUserUnit(unit) }
+            val sysPresets = if (presets == currentPresetsUser) {
+                settings.presetsMl
+            } else {
+                presets.map { it.toSystemMl(unit) }
+            }
             val updated = settings.copy(
                 dailyGoalMl = sysGoal,
                 presetsMl = sysPresets,
@@ -58,8 +68,6 @@ fun SettingsPreferencesScreen(
 
     fun handleUnitChange(newUnit: LiquidUnit) {
         if (newUnit != unit) {
-            goalValue = goalValue.toInt().toSystemMl(unit).toUserUnit(newUnit).toFloat()
-            presetTexts = presetTexts.map { it.toIntOrNull()?.toSystemMl(unit)?.toUserUnit(newUnit)?.toString() ?: "" }
             unit = newUnit
         }
     }

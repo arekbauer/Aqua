@@ -24,7 +24,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.arekb.aqua.HiltTestRunner"
     }
 
     buildTypes {
@@ -73,6 +73,8 @@ dependencies {
     add("ksp", libs.androidx.room.compiler)
     implementation(libs.hilt.android)
     add("ksp", libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    add("kspAndroidTest", libs.hilt.compiler)
     implementation(libs.aboutlibraries.core)
     implementation(libs.aboutlibraries.compose.m3)
     testImplementation(libs.junit)
