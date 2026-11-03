@@ -23,6 +23,10 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
   - Verifies summary metrics, no-log chart legend, daily goal statuses, pattern cards, insufficient-history messaging, and the empty daily log.
 - `AquaDaoTest` and `AquaDatabaseMigrationTest`
   - Verify effective-dated goal history replacement, inclusive date-range entry queries, and the v1-to-v2 migration preserving existing entries while starting goal history on the migration date.
+- `BackupDataTest`
+  - `exportAndImportDataRestoresFullBackup`: verifies gathering settings, goal history, and water intake records into an `AquaBackupData` structure, serializing to JSON, and restoring the complete backup into a fresh repository instance.
+- `SettingsViewModelTest`
+  - `exportImportAndWipeActionsUpdateUiStateAndMessage`: verifies exporting data, wiping all history, and importing data update the ViewModel state and emit appropriate user feedback messages.
 - JaCoCo report for local JVM tests.
 
 The current suite does not include screenshot baselines, full application navigation tests, or dedicated regression tests for Settings. The instrumented tests exercise screen components, Room DAO behavior, and the database migration directly; they do not yet run a complete Hilt-backed app journey.

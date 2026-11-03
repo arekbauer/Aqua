@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.room.Ignore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +28,7 @@ class AquaAppIntegrationTest {
     @Test
     fun loggingWaterUpdatesHistoryAutomatically() {
         // Find and click the default 200 ml quick add button on Today screen
-        composeRule.onNodeWithContentDescription("Add 200 millilitres of water").performClick()
+        composeRule.onNodeWithContentDescription("Add 200 ml of water").performClick()
 
         // Wait for it to reflect in Today total
         composeRule.onNodeWithText("200").assertIsDisplayed()

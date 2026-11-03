@@ -38,7 +38,7 @@ class TodayScreenTest {
 
         composeRule.onNodeWithText("1250").assertIsDisplayed()
         composeRule.onNodeWithText("750 ml to go").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Add 200 millilitres of water").performClick()
+        composeRule.onNodeWithContentDescription("Add 200 ml of water").performClick()
 
         assertEquals(200, addedAmount)
     }

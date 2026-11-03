@@ -1,5 +1,8 @@
 package com.arekb.aqua.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
@@ -45,7 +48,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import java.time.LocalDate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -310,13 +315,30 @@ private fun SettingsAppearanceRoute(modifier: Modifier, onBack: () -> Unit) {
 private fun SettingsDataManagementRoute(modifier: Modifier, snackbarHostState: SnackbarHostState, onBack: () -> Unit) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showResetConfirmation by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     var showWipeConfirmation by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { viewModel.exportData(context.contentResolver, it) }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            pendingImportUri = uri
+        }
+    }
+
     UserMessageEffect(state.message, snackbarHostState, onUndo = {}, onMessageShown = viewModel::messageShown)
 
     com.arekb.aqua.ui.screens.settings.subscreens.SettingsDataManagementScreen(
         modifier = modifier,
-        onReset = { showResetConfirmation = true },
+        onExportData = { exportLauncher.launch("aqua_backup_${LocalDate.now()}.json") },
+        onImportData = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
         onWipeAllData = { showWipeConfirmation = true },
         onBack = onBack
     )
@@ -325,7 +347,7 @@ private fun SettingsDataManagementRoute(modifier: Modifier, snackbarHostState: S
         AlertDialog(
             onDismissRequest = { showWipeConfirmation = false },
             title = { Text("Wipe all history?") },
-            text = { Text("This will permanently delete all your hydration records. This action cannot be undone.") },
+            text = { Text("This will permanently delete all your hydration records and settings. This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.wipeAllData()
@@ -338,19 +360,19 @@ private fun SettingsDataManagementRoute(modifier: Modifier, snackbarHostState: S
         )
     }
 
-    if (showResetConfirmation) {
+    pendingImportUri?.let { uri ->
         AlertDialog(
-            onDismissRequest = { showResetConfirmation = false },
-            title = { Text("Reset today’s total?") },
-            text = { Text("All of today’s entries will be removed. Past days will stay in your history.") },
+            onDismissRequest = { pendingImportUri = null },
+            title = { Text("Import JSON Backup?") },
+            text = { Text("Importing this backup will replace your current history and settings with the data from the backup file. Continue?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.resetToday()
-                    showResetConfirmation = false
-                }) { Text("Reset today") }
+                    viewModel.importData(context.contentResolver, uri)
+                    pendingImportUri = null
+                }) { Text("Import") }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirmation = false }) { Text("Cancel") }
+                TextButton(onClick = { pendingImportUri = null }) { Text("Cancel") }
             }
         )
     }

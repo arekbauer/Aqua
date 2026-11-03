@@ -64,6 +64,24 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         ensureDailyGoalForToday()
     }
 
+    override suspend fun getAllEntries(): List<WaterIntake> =
+        dao.getAllEntries().map { it.toDomain() }
+
+    override suspend fun getAllDailyGoals(): List<DailyGoal> =
+        dao.getAllDailyGoals().map { DailyGoal(it.effectiveLocalDate, it.goalMl) }
+
+    override suspend fun restoreData(
+        settings: HydrationSettings?,
+        dailyGoals: List<DailyGoal>,
+        entries: List<WaterIntake>
+    ) {
+        val settingsEntity = settings?.toEntity()
+        val goalEntities = dailyGoals.map { DailyGoalEntity(it.effectiveLocalDate, it.goalMl) }
+        val intakeEntities = entries.map { IntakeEntity(id = it.id, amountMl = it.amountMl, timestamp = it.timestampMillis, localDate = it.localDate) }
+        dao.restoreAllData(settingsEntity, goalEntities, intakeEntities)
+        ensureDailyGoalForToday()
+    }
+
     private fun SettingsEntity.toDomain() = HydrationSettings(
         dailyGoalMl = dailyGoalMl,
         presetsMl = listOf(presetOneMl, presetTwoMl, presetThreeMl),

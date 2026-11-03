@@ -34,4 +34,11 @@ object UseCaseModule {
     fun provideClearAllHistoryUseCase(repository: HydrationRepository) =
         com.arekb.aqua.domain.usecase.ClearAllHistoryUseCase(repository)
 
+    @Provides
+    fun provideExportDataUseCase(repository: HydrationRepository) =
+        com.arekb.aqua.domain.usecase.ExportDataUseCase(repository)
+
+    @Provides
+    fun provideImportDataUseCase(repository: HydrationRepository) =
+        com.arekb.aqua.domain.usecase.ImportDataUseCase(repository)
 }
