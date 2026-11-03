@@ -16,8 +16,20 @@ class ImportDataUseCase(
 
         val backupData = json.decodeFromString(AquaBackupData.serializer(), jsonString)
         val settings = backupData.settings?.toDomain()
+        if (settings != null) {
+            require(settings.dailyGoalMl > 0) { "Invalid daily goal in backup settings" }
+            require(settings.presetsMl.all { it > 0 }) { "Invalid preset amounts in backup settings" }
+        }
+
         val dailyGoals = backupData.dailyGoals.map { it.toDomain() }
+        require(dailyGoals.all { it.effectiveLocalDate.isNotBlank() && it.goalMl > 0 }) {
+            "Invalid daily goal history in backup"
+        }
+
         val entries = backupData.intakeEntries.map { it.toDomain() }
+        require(entries.all { it.localDate.isNotBlank() && it.amountMl > 0 }) {
+            "Invalid water intake entry in backup"
+        }
 
         repository.restoreData(settings, dailyGoals, entries)
     }

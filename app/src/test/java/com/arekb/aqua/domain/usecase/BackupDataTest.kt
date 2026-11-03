@@ -49,6 +49,39 @@ class BackupDataTest {
         assertEquals(2500, restoredGoals[0].goalMl)
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun importDataRejectsNegativeGoalOrPresetAmount() = runTest {
+        val json = """
+            {
+                "version": 1,
+                "settings": {
+                    "dailyGoalMl": -100,
+                    "presetsMl": [200, 350, 500]
+                }
+            }
+        """.trimIndent()
+
+        val targetRepository = FakeHydrationRepository()
+        val importDataUseCase = ImportDataUseCase(targetRepository)
+        importDataUseCase(ByteArrayInputStream(json.toByteArray(Charsets.UTF_8)))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun importDataRejectsInvalidIntakeEntries() = runTest {
+        val json = """
+            {
+                "version": 1,
+                "intakeEntries": [
+                    { "id": 1, "amountMl": -50, "timestampMillis": 1000, "localDate": "2026-10-30" }
+                ]
+            }
+        """.trimIndent()
+
+        val targetRepository = FakeHydrationRepository()
+        val importDataUseCase = ImportDataUseCase(targetRepository)
+        importDataUseCase(ByteArrayInputStream(json.toByteArray(Charsets.UTF_8)))
+    }
+
     private class FakeHydrationRepository(
         initialSettings: HydrationSettings = HydrationSettings(),
         initialGoals: List<DailyGoal> = emptyList(),

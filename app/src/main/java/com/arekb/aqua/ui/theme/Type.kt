@@ -1,21 +1,15 @@
 package com.arekb.aqua.ui.theme
 
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Typography
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.arekb.aqua.R
 
-@OptIn(ExperimentalTextApi::class)
-val RobotoFlexDisplay = FontFamily(
+val GoogleSansFlex = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
         variationSettings = FontVariation.Settings(
@@ -26,8 +20,7 @@ val RobotoFlexDisplay = FontFamily(
     )
 )
 
-@OptIn(ExperimentalTextApi::class)
-val RobotoFlexDisplayRound = FontFamily(
+val FontDisplayRound = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
         variationSettings = FontVariation.Settings(
@@ -39,7 +32,6 @@ val RobotoFlexDisplayRound = FontFamily(
     )
 )
 
-@OptIn(ExperimentalTextApi::class)
 val LargeHalfRoundHeadlines = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
@@ -52,8 +44,7 @@ val LargeHalfRoundHeadlines = FontFamily(
     )
 )
 
-@OptIn(ExperimentalTextApi::class)
-val RobotoFlexCustom = FontFamily(
+val GoogleSansCustom = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
         variationSettings = FontVariation.Settings(
@@ -66,7 +57,6 @@ val RobotoFlexCustom = FontFamily(
 )
 
 // For Titles, Headers, and Buttons (Labels)
-@OptIn(ExperimentalTextApi::class)
 val AquaRounded = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
@@ -88,7 +78,6 @@ val AquaRounded = FontFamily(
 
 // The Reading/Data Font -> SQUARE (ROND 0)
 // For Body text only
-@OptIn(ExperimentalTextApi::class)
 val AquaSquare = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
@@ -108,24 +97,23 @@ val AquaSquare = FontFamily(
     )
 )
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 val Typography = Typography(
     // --- DISPLAY (Big Numbers) ---
     displayLarge = TextStyle(
-        fontFamily = RobotoFlexDisplay,
+        fontFamily = GoogleSansFlex,
         fontWeight = FontWeight.Black,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = RobotoFlexDisplay,
+        fontFamily = GoogleSansFlex,
         fontWeight = FontWeight.Black,
         fontSize = 45.sp,
         lineHeight = 52.sp
     ),
     displaySmall = TextStyle(
-        fontFamily = RobotoFlexDisplay,
+        fontFamily = GoogleSansFlex,
         fontWeight = FontWeight.Black,
         fontSize = 36.sp,
         lineHeight = 44.sp
@@ -172,19 +160,19 @@ val Typography = Typography(
     ),
 
     headlineLargeEmphasized = TextStyle(
-        fontFamily = RobotoFlexCustom,
+        fontFamily = GoogleSansCustom,
         fontWeight = FontWeight.SemiBold,
         fontSize = 32.sp,
         lineHeight = 40.sp
     ),
     headlineMediumEmphasized = TextStyle(
-        fontFamily = RobotoFlexCustom,
+        fontFamily = GoogleSansCustom,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 36.sp
     ),
     headlineSmallEmphasized = TextStyle(
-        fontFamily = RobotoFlexCustom,
+        fontFamily = GoogleSansCustom,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 32.sp
@@ -214,20 +202,20 @@ val Typography = Typography(
     ),
 
     titleLargeEmphasized = TextStyle(
-        fontFamily = RobotoFlexDisplayRound,
+        fontFamily = FontDisplayRound,
         fontWeight = FontWeight.Black,
         fontSize = 22.sp,
         lineHeight = 28.sp
     ),
     titleMediumEmphasized = TextStyle(
-        fontFamily = RobotoFlexDisplayRound,
+        fontFamily = FontDisplayRound,
         fontWeight = FontWeight.Black,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp
     ),
     titleSmallEmphasized = TextStyle(
-        fontFamily = RobotoFlexDisplayRound,
+        fontFamily = FontDisplayRound,
         fontWeight = FontWeight.Black,
         fontSize = 14.sp,
         lineHeight = 20.sp,
@@ -281,7 +269,7 @@ val Typography = Typography(
     ),
 
     labelLargeEmphasized = TextStyle(
-        fontFamily = RobotoFlexDisplayRound,
+        fontFamily = FontDisplayRound,
         fontWeight = FontWeight.Black,
         fontSize = 14.sp,
         lineHeight = 20.sp,

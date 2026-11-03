@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import java.time.Clock
+
 data class TodayUiState(
     val settings: HydrationSettings = HydrationSettings(),
     val today: String = LocalDate.now().toString(),
@@ -36,7 +38,8 @@ data class TodayUiState(
 @HiltViewModel
 class TodayViewModel @Inject constructor(
     private val repository: HydrationRepository,
-    private val addWater: AddWaterUseCase
+    private val addWater: AddWaterUseCase,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) : ViewModel() {
     private val todayKey = MutableStateFlow(localDateNow())
     private val messageState = MutableStateFlow<UserMessage?>(null)
@@ -61,7 +64,7 @@ class TodayViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             while (true) {
-                val now = ZonedDateTime.now()
+                val now = ZonedDateTime.now(clock.zone)
                 val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(now.zone)
                 delay(Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1L))
                 refreshDate()
@@ -126,5 +129,5 @@ class TodayViewModel @Inject constructor(
         messageState.value = UserMessage(++nextMessageId, text, undoIntake)
     }
 
-    private fun localDateNow(): String = LocalDate.now(ZoneId.systemDefault()).toString()
+    private fun localDateNow(): String = clock.instant().atZone(ZoneId.systemDefault()).toLocalDate().toString()
 }
