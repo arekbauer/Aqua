@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.WaterDrop
@@ -26,6 +27,7 @@ fun SettingsMainScreen(
     onNavigateToPreferences: () -> Unit,
     onNavigateToAppearance: () -> Unit,
     onNavigateToDataManagement: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -68,6 +70,16 @@ fun SettingsMainScreen(
                     subtitle = "Manage your history",
                     icon = Icons.Outlined.Storage,
                     onClick = onNavigateToDataManagement
+                )
+                Spacer(Modifier.height(14.dp))
+            }
+
+            item {
+                SettingsCategoryItem(
+                    title = "About",
+                    subtitle = "App version, developer info, and open source links",
+                    icon = Icons.Outlined.Info,
+                    onClick = onNavigateToAbout
                 )
                 Spacer(Modifier.height(14.dp))
             }

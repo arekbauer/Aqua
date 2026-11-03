@@ -134,6 +134,12 @@ fun AquaRoot() {
                     onBack = navigationState::goBack
                 )
             }
+            entry<com.arekb.aqua.ui.navigation.SettingsAbout> {
+                SettingsAboutRoute(
+                    modifier = Modifier,
+                    onBack = navigationState::goBack
+                )
+            }
         }
         val entries = navigationState.toDecoratedEntries(entryProvider)
 
@@ -281,7 +287,16 @@ private fun SettingsRoute(modifier: Modifier, navigateTo: (NavKey) -> Unit) {
         modifier = modifier,
         onNavigateToPreferences = { navigateTo(com.arekb.aqua.ui.navigation.SettingsPreferences) },
         onNavigateToAppearance = { navigateTo(com.arekb.aqua.ui.navigation.SettingsAppearance) },
-        onNavigateToDataManagement = { navigateTo(com.arekb.aqua.ui.navigation.SettingsDataManagement) }
+        onNavigateToDataManagement = { navigateTo(com.arekb.aqua.ui.navigation.SettingsDataManagement) },
+        onNavigateToAbout = { navigateTo(com.arekb.aqua.ui.navigation.SettingsAbout) }
+    )
+}
+
+@Composable
+private fun SettingsAboutRoute(modifier: Modifier, onBack: () -> Unit) {
+    com.arekb.aqua.ui.screens.settings.subscreens.SettingsAboutScreen(
+        modifier = modifier,
+        onBack = onBack
     )
 }
 
