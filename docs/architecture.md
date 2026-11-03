@@ -1,10 +1,8 @@
 # Tech Stack & Architecture
 
-Aqua is designed following modern Android architecture guidelines (Clean Architecture + Unidirectional Data Flow with MVI/MVVM).
+Aqua is built following Android architecture guidelines (Clean Architecture + Unidirectional Data Flow with MVI/MVVM).
 
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language**: Kotlin 2.x
 - **UI Framework**: Jetpack Compose with Material 3 Expressive UI (`androidx.compose.material3`)
@@ -14,9 +12,7 @@ Aqua is designed following modern Android architecture guidelines (Clean Archite
 - **Serialization**: Kotlinx Serialization (`kotlinx-serialization-json`)
 - **Testing**: JUnit 4, Compose UI Testing, Room Migration Testing, and JaCoCo coverage reports
 
----
-
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The codebase is organized into distinct layers to enforce separation of concerns and testability:
 
@@ -28,7 +24,7 @@ app/src/main/java/com/arekb/aqua/
  └── ui/              # Navigation, Screens (Today, History, Settings), Components, and Theme
 ```
 
-### Unidirectional Data Flow (UDF) Diagram
+### Unidirectional Data Flow (UDF)
 
 ```mermaid
 flowchart TD
@@ -47,9 +43,7 @@ flowchart TD
     VM -- "StateFlow of UiState" --> UI
 ```
 
----
-
-## 💾 Local Backup & Restore Pipeline
+## Local Backup & Restore Pipeline
 
 ```mermaid
 flowchart LR
@@ -68,9 +62,7 @@ flowchart LR
     ExportUC -- "Encoded OutputStream" --> File
 ```
 
----
-
-## 🔑 Key Architectural Principles
+## Key Architectural Principles
 
 1. **Unidirectional Data Flow (UDF)**: ViewModels expose reactive state via `StateFlow` collected with `collectAsStateWithLifecycle()` in Compose.
 2. **Injectable Clock**: `java.time.Clock` is injected via Hilt across ViewModels and UseCases for deterministic date/time handling and testing.
