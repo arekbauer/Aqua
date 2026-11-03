@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.WaterIntake
-import com.arekb.aqua.domain.model.label
-import com.arekb.aqua.domain.model.toUserUnit
 import com.arekb.aqua.domain.repository.HydrationRepository
 import com.arekb.aqua.domain.usecase.AddWaterUseCase
 import com.arekb.aqua.ui.model.UserMessage
@@ -80,11 +78,8 @@ class TodayViewModel @Inject constructor(
         if (amountMl <= 0) return
         viewModelScope.launch {
             try {
-                val intake = addWater(amountMl) ?: return@launch
+                addWater(amountMl) ?: return@launch
                 refreshDate()
-                val unit = uiState.value.settings.liquidUnit
-                val amountVal = intake.amountMl.toUserUnit(unit)
-                showMessage("$amountVal ${unit.label()} added", intake)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -98,7 +93,15 @@ class TodayViewModel @Inject constructor(
     }
 
     fun delete(intake: WaterIntake) {
-        performWrite("delete that entry", "Entry deleted") { repository.undoIntake(intake) }
+        viewModelScope.launch {
+            try {
+                repository.undoIntake(intake)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                showMessage("Couldn’t delete that entry. Please try again.")
+            }
+        }
     }
 
     fun updateAmount(intake: WaterIntake, amountMl: Int) {

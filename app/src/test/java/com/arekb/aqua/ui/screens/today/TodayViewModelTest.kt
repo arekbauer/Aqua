@@ -40,8 +40,7 @@ class TodayViewModelTest {
             runCurrent()
             val created = repository.entries.value.single()
             assertEquals(250, viewModel.uiState.value.todayTotalMl)
-            assertEquals("250 ml added", viewModel.uiState.value.message?.text)
-            assertEquals(created, viewModel.uiState.value.message?.undoIntake)
+            assertNull(viewModel.uiState.value.message)
 
             viewModel.updateAmount(created, 400)
             runCurrent()
@@ -51,7 +50,6 @@ class TodayViewModelTest {
             viewModel.delete(created)
             runCurrent()
             assertEquals(0, viewModel.uiState.value.todayTotalMl)
-            assertEquals("Entry deleted", viewModel.uiState.value.message?.text)
 
             viewModel.logWater(300)
             runCurrent()

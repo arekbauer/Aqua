@@ -7,7 +7,7 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
 ## Coverage added
 
 - `TodayViewModelTest`
-  - `loggingUpdatingDeletingAndUndoingEntriesUpdatesTodayState`: logs 250 ml, checks the daily total and undo message, updates the entry to 400 ml, deletes it, logs another entry and undoes it, then verifies stale message acknowledgements are ignored and the current message can be cleared.
+  - `loggingUpdatingDeletingAndUndoingEntriesUpdatesTodayState`: logs 250 ml, verifies daily total updates without snackbar popup, updates the entry to 400 ml, deletes it, logs another entry and undoes it, then verifies stale message acknowledgements are ignored and current messages can be cleared.
   - `nonPositiveAmountsAreIgnored`: verifies that logging 0 ml does not create an entry.
 - `TodayScreenTest`
   - `quickAddLogsConfiguredAmountAndShowsTodaySummary`: verifies the current intake and remaining goal are shown, and selecting the configured 200 ml quick-add button invokes the add callback with 200.

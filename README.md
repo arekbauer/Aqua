@@ -10,15 +10,19 @@ Aqua is a private, local-first hydration tracking app for Android built with Jet
 
 ## Screenshots
 
+<p align="center">
 <img src="media/02_today_light.png" width="30%" /> <img src="media/03_add_drink_bottom_sheet_dark.png" width="30%" /> <img src="media/04_history_chart_light.png" width="30%" />
+</p>
 
 ## App Showcase
 <details>
 <summary>View Full Screenshot Gallery</summary>
 <br>
 
+<p align="center">
 <img src="media/05_history_daily_logs_dark.png" width="30%" /> <img src="media/06_settings_main_dynamic.png" width="30%" /> <img src="media/07_settings_preferences_light.png" width="30%" />
 <img src="media/10_settings_about_dark.png" width="30%" /> <img src="media/08_settings_appearance_dark.png" width="30%" /> <img src="media/09_settings_data_management_light.png" width="30%" />
+</p>
 </details>
 
 ## Features
