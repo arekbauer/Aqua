@@ -33,6 +33,16 @@ Aqua is a private, local-first hydration tracking app for Android built with Jet
 - **Local & Private**: No account registration, no remote servers, and no telemetry.
 - **Backup & Restore**: Export and import full intake history and settings to local JSON files.
 
+### Help Test on Google Play (Closed Testing)
+
+To get Aqua officially launched on the Google Play Store, Google requires a 14-day closed testing phase with 12 opted-in testers.
+
+If you'd like to support the project and try out early builds directly through the Play Store, please drop your Google Play email in this short form:
+
+👉 **[Join the Aqua Closed Testing Programme](https://forms.gle/QjpH5rJqFqvD9Zwk7)**
+
+Every bit of feedback, bug reporting, or UI thought helps immensely. Thanks for trying out Aqua and following along on this journey!
+
 ## Documentation
 
 - [Architecture & Tech Stack](docs/architecture.md)
