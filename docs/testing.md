@@ -61,8 +61,18 @@ From the repository root in PowerShell:
 
 The emulator command needs a running Android emulator or connected device. JaCoCo HTML output is written under `app/build/reports/jacoco/jacocoTestReport/html/`.
 
-## CI
+## CI & Release Build
 
-`.github/workflows/android-ci.yml` runs on pull requests and pushes to any branch. It runs JVM tests, Android lint, a debug build, and a coverage report. The debug APK and quality reports are uploaded as workflow artifacts. Compose behavior and Room database tests are intentionally excluded from CI and can be run locally with `connectedDebugAndroidTest` on an emulator or connected device.
+`.github/workflows/android-ci.yml` runs on pull requests, pushes to `main`, and version tags (`v*`). It runs JVM tests, Android lint, debug assemble, release assemble, and coverage reports. Both debug and release APKs are uploaded as workflow artifacts.
+
+When version tags (e.g. `v1.0.0`) are pushed, the workflow automatically attaches the signed release APK directly to the GitHub Release using `softprops/action-gh-release@v2`.
+
+To sign release builds with a custom production key in GitHub Actions, set these Repository Secrets under **Settings -> Secrets and variables -> Actions**:
+- `RELEASE_KEYSTORE_BASE64`: Base64-encoded string of your keystore file (`[Convert]::ToBase64String([System.IO.File]::ReadAllBytes('release.keystore'))`).
+- `KEYSTORE_PASSWORD`: Keystore password.
+- `KEY_ALIAS`: Key alias name.
+- `KEY_PASSWORD`: Key password.
+
+If repository secrets are not configured, CI automatically falls back to signing with debug keys so builds never fail.
 
 Visual screenshot references are not configured yet; there is no baseline directory.
