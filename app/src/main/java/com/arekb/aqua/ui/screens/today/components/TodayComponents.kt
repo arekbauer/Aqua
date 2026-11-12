@@ -54,6 +54,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -203,9 +204,9 @@ fun CookieReservoirProgressGauge(
         animationSpec = tween(900), label = "cookie reservoir hydration progress"
     )
     val colors = MaterialTheme.colorScheme
-    var previousMl by remember { mutableIntStateOf(currentMl) }
-    var shapeIndex by remember { mutableIntStateOf(0) }
-    var shapeStartIndex by remember { mutableIntStateOf(0) }
+    var previousMl by rememberSaveable { mutableIntStateOf(currentMl) }
+    var shapeIndex by rememberSaveable { mutableIntStateOf(0) }
+    var shapeStartIndex by rememberSaveable { mutableIntStateOf(0) }
     val shapeMorphProgress = remember { Animatable(1f) }
     val reservoirBounce = remember { Animatable(1f) }
 

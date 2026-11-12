@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,7 +47,7 @@ fun SettingsAboutScreen(
     val context = LocalContext.current
     val versionName = rememberVersionName(context)
     val appIconBitmap = rememberAppIconBitmap(context)
-    var showLicensesSheet by remember { mutableStateOf(false) }
+    var showLicensesSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     Scaffold(

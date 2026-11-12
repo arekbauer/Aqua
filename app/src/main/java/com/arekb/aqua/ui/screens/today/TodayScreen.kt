@@ -28,6 +28,7 @@ import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,9 +63,9 @@ fun TodayScreen(
     onDelete: (WaterIntake) -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showDrinkPicker by remember { mutableStateOf(false) }
+    var showDrinkPicker by rememberSaveable { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<WaterIntake?>(null) }
-    var editAmount by remember { mutableStateOf("") }
+    var editAmount by rememberSaveable { mutableStateOf("") }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     Scaffold(
