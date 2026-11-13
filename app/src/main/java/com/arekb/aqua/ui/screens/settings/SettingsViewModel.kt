@@ -17,11 +17,13 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class SettingsUiState(
     val settings: HydrationSettings = HydrationSettings(),
@@ -63,9 +65,12 @@ class SettingsViewModel @Inject constructor(
     fun exportData(contentResolver: ContentResolver, uri: Uri) {
         viewModelScope.launch {
             try {
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    exportDataUseCase(outputStream)
-                } ?: throw IllegalStateException("Could not open output stream")
+                // Blocking file I/O and JSON encoding run on the IO dispatcher, not the main thread.
+                withContext(Dispatchers.IO) {
+                    contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        exportDataUseCase(outputStream)
+                    } ?: throw IllegalStateException("Could not open output stream")
+                }
                 showMessage("Data exported successfully")
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -82,9 +87,12 @@ class SettingsViewModel @Inject constructor(
     fun importData(contentResolver: ContentResolver, uri: Uri) {
         viewModelScope.launch {
             try {
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    importDataUseCase(inputStream)
-                } ?: throw IllegalStateException("Could not open input stream")
+                // Blocking file I/O and JSON decoding run on the IO dispatcher, not the main thread.
+                withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.use { inputStream ->
+                        importDataUseCase(inputStream)
+                    } ?: throw IllegalStateException("Could not open input stream")
+                }
                 showMessage("Data restored successfully")
             } catch (cancelled: CancellationException) {
                 throw cancelled

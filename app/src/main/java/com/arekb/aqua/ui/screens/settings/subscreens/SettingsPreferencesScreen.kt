@@ -1,7 +1,8 @@
 package com.arekb.aqua.ui.screens.settings.subscreens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -101,43 +102,41 @@ fun SettingsPreferencesScreen(
             )
         },
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp)
+        // Three fixed cards: a plain scrollable Column avoids lazy-list overhead.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp)
         ) {
-            item {
-                DailyGoalSetting(
-                    value = goalValue,
-                    onValueChange = { goalValue = it },
+            DailyGoalSetting(
+                value = goalValue,
+                onValueChange = { goalValue = it },
+                unitLabel = unitLabel,
+                range = sliderRange,
+                step = sliderStep
+            )
+            Spacer(Modifier.height(14.dp))
+
+            SettingsCard("Quick add", "Choose three amounts for your buttons") {
+                QuickAddSettingsGrid(
+                    presetTexts = presetTexts,
                     unitLabel = unitLabel,
-                    range = sliderRange,
-                    step = sliderStep
+                    onPresetChange = { index, newValue -> 
+                        presetTexts = presetTexts.toMutableList().also { it[index] = newValue }
+                    }
                 )
-                Spacer(Modifier.height(14.dp))
             }
+            Spacer(Modifier.height(14.dp))
 
-            item {
-                SettingsCard("Quick add", "Choose three amounts for your buttons") {
-                    QuickAddSettingsGrid(
-                        presetTexts = presetTexts,
-                        unitLabel = unitLabel,
-                        onPresetChange = { index, newValue -> 
-                            presetTexts = presetTexts.toMutableList().also { it[index] = newValue }
-                        }
-                    )
-                }
-                Spacer(Modifier.height(14.dp))
+            SettingsCard("Units", "Choose your preferred unit") {
+                UnitsPicker(
+                    unit = unit,
+                    onUnitChange = { handleUnitChange(it) }
+                )
             }
-
-            item {
-                SettingsCard("Units", "Choose your preferred unit") {
-                    UnitsPicker(
-                        unit = unit,
-                        onUnitChange = { handleUnitChange(it) }
-                    )
-                }
-                Spacer(Modifier.height(14.dp))
-            }
+            Spacer(Modifier.height(14.dp))
         }
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AboutLibraries loads its license data by resource name at runtime, so the resource
+     shrinker cannot see the reference and would otherwise strip it from release builds. -->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/aboutlibraries" />

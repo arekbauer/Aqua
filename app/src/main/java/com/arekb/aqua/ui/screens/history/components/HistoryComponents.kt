@@ -1,7 +1,5 @@
 package com.arekb.aqua.ui.screens.history.components
 
-import android.R
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,11 +30,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -118,17 +120,19 @@ fun SectionHeading(title: String, subtitle: String) {
 fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
     val colors = MaterialTheme.colorScheme
     val unitLabel = unit.label()
-    val chartDescription = days.joinToString(separator = ", ") { day ->
-        val date = formatShortDate(day.localDate)
-        val dayTotal = day.totalMl.toUserUnit(unit)
-        val dayGoal = day.goalMl?.toUserUnit(unit)
-        when {
-            day.localDate == today -> "$date, today, $dayTotal $unitLabel, in progress, goal ${dayGoal ?: "unavailable"}"
-            !day.hasLogs -> "$date, no logs, goal ${dayGoal ?: "unavailable"}"
-            else -> "$date, $dayTotal $unitLabel, goal ${dayGoal ?: "unavailable"}"
+    val chartDescription = remember(days, today, unit) {
+        days.joinToString(separator = ", ") { day ->
+            val date = formatShortDate(day.localDate)
+            val dayTotal = day.totalMl.toUserUnit(unit)
+            val dayGoal = day.goalMl?.toUserUnit(unit)
+            when {
+                day.localDate == today -> "$date, today, $dayTotal $unitLabel, in progress, goal ${dayGoal ?: "unavailable"}"
+                !day.hasLogs -> "$date, no logs, goal ${dayGoal ?: "unavailable"}"
+                else -> "$date, $dayTotal $unitLabel, goal ${dayGoal ?: "unavailable"}"
+            }
         }
     }
-    
+
     val animationPlayed = rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         animationPlayed.value = true
@@ -143,9 +147,14 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
     )
 
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = MaterialTheme.typography.labelMedium.copy(
-        color = colors.onSurface.copy(alpha = 0.75f)
-    )
+    val baseLabelStyle = MaterialTheme.typography.labelMedium
+    val labelColor = colors.onSurface
+    val labelStyle = remember(baseLabelStyle, labelColor) {
+        baseLabelStyle.copy(color = labelColor.copy(alpha = 0.75f))
+    }
+    val primaryColor = colors.primary
+    val todayColor = colors.tertiary
+    val outlineColor = colors.outlineVariant
 
     Column(
         Modifier.fillMaxWidth()
@@ -153,95 +162,100 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
             .background(colors.surfaceContainerLow)
             .padding(horizontal = 16.dp, vertical = 20.dp)
     ) {
-        Canvas(
+        // A single node that draws the whole chart. Everything that only depends on the data or the
+        // size (scale, goal path, stroke, measured labels) is computed once inside drawWithCache;
+        // only the animation progress is read per frame, in the draw block.
+        Spacer(
             Modifier.fillMaxWidth().height(180.dp)
                 .semantics { contentDescription = "Weekly water intake chart. $chartDescription" }
-        ) {
-            if (days.isEmpty()) return@Canvas
-            
-            // Increase maximum by 25% to leave plenty of room for text labels at the top
-            val maximum = (days.flatMap { listOf(it.totalMl, it.goalMl ?: 0) }.maxOrNull() ?: 0).coerceAtLeast(1) * 1.25f
-            val topInset = 24.dp.toPx()
-            val bottomInset = 12.dp.toPx()
-            val chartHeight = size.height - topInset - bottomInset
-            val slotWidth = size.width / days.size
-            val barWidth = (slotWidth * 0.66f).coerceAtMost(44.dp.toPx())
-            val cornerRadius = CornerRadius(12.dp.toPx())
-            
-            val goalPath = Path()
-            var hasGoal = false
+                .drawWithCache {
+                    if (days.isEmpty()) return@drawWithCache onDrawBehind { }
 
-            // Draw goal line behind the bars
-            days.forEachIndexed { index, day ->
-                val centerX = slotWidth * (index + 0.5f)
-                val baseline = topInset + chartHeight
-                
-                day.goalMl?.let { goal ->
-                    val goalY = baseline - chartHeight * (goal / maximum)
-                    if (!hasGoal) {
-                        goalPath.moveTo(centerX, goalY)
-                    } else {
-                        goalPath.lineTo(centerX, goalY)
+                    // Increase maximum by 25% to leave plenty of room for text labels at the top
+                    val maximum = (days.maxOfOrNull { maxOf(it.totalMl, it.goalMl ?: 0) } ?: 0)
+                        .coerceAtLeast(1) * 1.25f
+                    val topInset = 24.dp.toPx()
+                    val bottomInset = 12.dp.toPx()
+                    val chartHeight = size.height - topInset - bottomInset
+                    val baseline = topInset + chartHeight
+                    val slotWidth = size.width / days.size
+                    val barWidth = (slotWidth * 0.66f).coerceAtMost(44.dp.toPx())
+                    val cornerRadius = CornerRadius(12.dp.toPx())
+                    // Minimum height so a logged day is always visible
+                    val minBarHeight = 12.dp.toPx()
+                    val labelGap = 4.dp.toPx()
+                    val dotRadius = 3.dp.toPx()
+
+                    val goalPath = Path()
+                    var goalPathStarted = false
+                    days.forEachIndexed { index, day ->
+                        val goal = day.goalMl ?: return@forEachIndexed
+                        val centerX = slotWidth * (index + 0.5f)
+                        val goalY = baseline - chartHeight * (goal / maximum)
+                        if (goalPathStarted) goalPath.lineTo(centerX, goalY) else goalPath.moveTo(centerX, goalY)
+                        goalPathStarted = true
                     }
-                    hasGoal = true
-                }
-            }
-            
-            if (hasGoal) {
-                drawPath(
-                    path = goalPath,
-                    color = colors.outlineVariant,
-                    style = Stroke(
+                    val hasGoal = goalPathStarted
+                    val goalStroke = Stroke(
                         width = 2.dp.toPx(),
                         cap = StrokeCap.Round,
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()), 0f)
                     )
-                )
-            }
-
-            // Draw bars and labels
-            days.forEachIndexed { index, day ->
-                val centerX = slotWidth * (index + 0.5f)
-                val baseline = topInset + chartHeight
-                
-                val targetHeight = chartHeight * (day.totalMl / maximum)
-                val animatedHeight = targetHeight * animationProgress.value
-                val finalHeight = animatedHeight.coerceAtLeast(12.dp.toPx()) // Minimum height so it's visible
-                val barTop = baseline - finalHeight
-                
-                if (day.hasLogs) {
-                    val barColor = if (day.localDate == today) colors.tertiary else colors.primary
-                    drawRoundRect(
-                        color = barColor,
-                        topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, barTop),
-                        size = androidx.compose.ui.geometry.Size(barWidth, finalHeight),
-                        cornerRadius = cornerRadius
-                    )
-                    
-                    // Fade in the text labels slightly after the bars start rising
-                    val textAlpha = (animationProgress.value * 1.5f - 0.5f).coerceIn(0f, 1f)
-                    if (textAlpha > 0f) {
-                        val valueText = day.totalMl.toUserUnit(unit).toString()
-                        val textLayout = textMeasurer.measure(valueText, style = labelStyle)
-                        drawText(
-                            textLayoutResult = textLayout,
-                            topLeft = androidx.compose.ui.geometry.Offset(
-                                x = centerX - textLayout.size.width / 2f,
-                                y = barTop - textLayout.size.height - 4.dp.toPx()
-                            ),
-                            alpha = textAlpha
-                        )
+                    val valueLayouts = days.map { day ->
+                        if (day.hasLogs) {
+                            textMeasurer.measure(day.totalMl.toUserUnit(unit).toString(), style = labelStyle)
+                        } else {
+                            null
+                        }
                     }
-                } else {
-                    drawCircle(
-                        color = colors.outlineVariant,
-                        radius = 3.dp.toPx(),
-                        center = androidx.compose.ui.geometry.Offset(centerX, baseline - 3.dp.toPx())
-                    )
+
+                    onDrawBehind {
+                        val progress = animationProgress.value
+
+                        // Goal line is drawn behind the bars
+                        if (hasGoal) {
+                            drawPath(path = goalPath, color = outlineColor, style = goalStroke)
+                        }
+
+                        // Fade in the text labels slightly after the bars start rising
+                        val textAlpha = (progress * 1.5f - 0.5f).coerceIn(0f, 1f)
+
+                        days.forEachIndexed { index, day ->
+                            val centerX = slotWidth * (index + 0.5f)
+                            if (day.hasLogs) {
+                                val targetHeight = chartHeight * (day.totalMl / maximum)
+                                val barHeight = (targetHeight * progress).coerceAtLeast(minBarHeight)
+                                val barTop = baseline - barHeight
+                                drawRoundRect(
+                                    color = if (day.localDate == today) todayColor else primaryColor,
+                                    topLeft = Offset(centerX - barWidth / 2f, barTop),
+                                    size = Size(barWidth, barHeight),
+                                    cornerRadius = cornerRadius
+                                )
+
+                                val valueLayout = valueLayouts[index]
+                                if (valueLayout != null && textAlpha > 0f) {
+                                    drawText(
+                                        textLayoutResult = valueLayout,
+                                        topLeft = Offset(
+                                            x = centerX - valueLayout.size.width / 2f,
+                                            y = barTop - valueLayout.size.height - labelGap
+                                        ),
+                                        alpha = textAlpha
+                                    )
+                                }
+                            } else {
+                                drawCircle(
+                                    color = outlineColor,
+                                    radius = dotRadius,
+                                    center = Offset(centerX, baseline - dotRadius)
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        }
-        
+        )
+
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth()) {
             days.forEach { day ->
@@ -256,7 +270,7 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
                 )
             }
         }
-        
+
         if (days.none { it.goalMl != null }) {
             Spacer(Modifier.height(12.dp))
             Text(
@@ -274,16 +288,21 @@ fun HistoryWeekChart(days: List<HistoryDay>, today: String, unit: LiquidUnit) {
 fun HistoryChartLegend(modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
         val goalLineColor = MaterialTheme.colorScheme.outlineVariant
-        Canvas(Modifier.width(18.dp).height(2.dp)) {
-            drawLine(
-                color = goalLineColor,
-                start = androidx.compose.ui.geometry.Offset(0f, size.height / 2),
-                end = androidx.compose.ui.geometry.Offset(size.width, size.height / 2),
-                strokeWidth = size.height,
-                cap = StrokeCap.Round,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()), 0f)
-            )
-        }
+        Spacer(
+            Modifier.width(18.dp).height(2.dp).drawWithCache {
+                val dashEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()), 0f)
+                onDrawBehind {
+                    drawLine(
+                        color = goalLineColor,
+                        start = Offset(0f, size.height / 2),
+                        end = Offset(size.width, size.height / 2),
+                        strokeWidth = size.height,
+                        cap = StrokeCap.Round,
+                        pathEffect = dashEffect
+                    )
+                }
+            }
+        )
         Spacer(Modifier.width(6.dp))
         Text(
             "Goal",

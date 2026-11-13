@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -51,6 +50,7 @@ import androidx.compose.material3.toPath
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,14 +63,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -82,8 +83,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import com.arekb.aqua.ui.theme.AquaTheme
 import androidx.graphics.shapes.Morph
 import com.arekb.aqua.domain.model.WaterIntake
@@ -100,7 +99,7 @@ import kotlin.math.sin
 /** A restrained typographic version with a slim progress line. */
 @Composable
 fun MinimalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier = Modifier) {
-    val fraction by animateFloatAsState(
+    val fraction = animateFloatAsState(
         (currentMl.toFloat() / goalMl.coerceAtLeast(1)).coerceIn(0f, 1f),
         animationSpec = tween(650),
         label = "minimal hydration progress"
@@ -135,28 +134,35 @@ fun MinimalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier = Modif
         Spacer(Modifier.height(2.dp))
         Text("of $goalMl ml today", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         Spacer(Modifier.height(16.dp))
+        val progressColor = colors.primary
         Box(
             Modifier.fillMaxWidth().height(7.dp).clip(CircleShape)
                 .background(colors.surfaceContainerHighest)
-        ) {
-            Box(
-                Modifier.fillMaxWidth(fraction).fillMaxHeight().clip(CircleShape)
-                    .background(colors.primary)
-            )
-        }
+                // The animated fraction is read while drawing, so progress frames skip composition and layout.
+                .drawBehind {
+                    drawRoundRect(
+                        color = progressColor,
+                        size = Size(size.width * fraction.value, size.height),
+                        cornerRadius = CornerRadius(size.height / 2f)
+                    )
+                }
+        )
     }
 }
 
 /** Minimal typography paired with a narrow vertical water level. */
 @Composable
 fun MinimalVerticalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier = Modifier) {
-    val fraction by animateFloatAsState(
+    val fraction = animateFloatAsState(
         (currentMl.toFloat() / goalMl.coerceAtLeast(1)).coerceIn(0f, 1f),
         animationSpec = tween(800),
         label = "minimal vertical hydration progress"
     )
     val colors = MaterialTheme.colorScheme
     val percent = (currentMl * 100f / goalMl.coerceAtLeast(1)).toInt()
+    val progressColor = colors.primary
+    // Only recompose the label when the threshold is crossed, not on every animation frame.
+    val isMostlyFull by remember { derivedStateOf { fraction.value > 0.48f } }
 
     Row(
         modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
@@ -177,14 +183,21 @@ fun MinimalVerticalProgressGauge(currentMl: Int, goalMl: Int, modifier: Modifier
                 .background(colors.surfaceContainerHighest).padding(7.dp)
         ) {
             Box(
-                Modifier.fillMaxWidth().fillMaxHeight(fraction).align(Alignment.BottomCenter)
-                    .clip(RoundedCornerShape(26.dp)).background(colors.primary)
+                Modifier.matchParentSize().drawBehind {
+                    val fillHeight = size.height * fraction.value
+                    drawRoundRect(
+                        color = progressColor,
+                        topLeft = Offset(0f, size.height - fillHeight),
+                        size = Size(size.width, fillHeight),
+                        cornerRadius = CornerRadius(26.dp.toPx())
+                    )
+                }
             )
             Text(
                 "$percent%",
                 modifier = Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.titleMedium,
-                color = if (fraction > 0.48f) colors.onPrimary else colors.onSurfaceVariant,
+                color = if (isMostlyFull) colors.onPrimary else colors.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -199,7 +212,7 @@ fun CookieReservoirProgressGauge(
     unit: LiquidUnit,
     modifier: Modifier = Modifier
 ) {
-    val fraction by animateFloatAsState(
+    val fraction = animateFloatAsState(
         (currentMl.toFloat() / goalMl.coerceAtLeast(1)).coerceIn(0f, 1f),
         animationSpec = tween(900), label = "cookie reservoir hydration progress"
     )
@@ -236,8 +249,6 @@ fun CookieReservoirProgressGauge(
     val shapeMorph = remember(shapeStartIndex, shapeIndex) {
         Morph(RESERVOIR_SHAPE_STAGES[shapeStartIndex], RESERVOIR_SHAPE_STAGES[shapeIndex])
     }
-    val reservoirShape = ReservoirMorphShape(shapeMorph, shapeMorphProgress.value)
-
     Box(
         modifier = modifier.graphicsLayer {
             scaleX = reservoirBounce.value
@@ -245,10 +256,14 @@ fun CookieReservoirProgressGauge(
         },
         contentAlignment = Alignment.Center
     ) {
+        // Progress values are passed as providers so they are only read while drawing; the 900 ms
+        // morph and fill animations therefore never recompose or re-layout this composable.
         CookieReservoirLiquid(
-            fraction = fraction,
-            color = colors.primary,
-            shape = reservoirShape
+            fractionProvider = { fraction.value },
+            morph = shapeMorph,
+            morphProgressProvider = { shapeMorphProgress.value },
+            liquidColor = colors.primary,
+            trackColor = colors.surfaceContainerHighest
         )
         CookieReservoirReadout(
             currentMl = currentMl,
@@ -273,45 +288,55 @@ private val RESERVOIR_SHAPE_STAGES = listOf(
 // Adjust this value to resize the reservoir outline and its liquid together.
 private val RESERVOIR_SIZE = 256.dp
 
-/** A Material 3 polygon morph rendered as a Compose clip shape. */
+/**
+ * Draws the reservoir: a Material 3 polygon morph used as the clip, filled with a track colour and
+ * a wavy liquid level. Everything is drawn in a single node using [drawWithCache], and the animated
+ * values are only read inside the draw block so they skip the composition and layout phases.
+ * The [Path]s and [Matrix] are allocated once per size change and reused on every frame.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private class ReservoirMorphShape(
-    private val morph: Morph,
-    private val progress: Float
-) : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
-        val path = morph.toPath(progress)
-        val scale = Matrix().apply { scale(x = size.width, y = size.height) }
-        path.transform(scale)
-        path.translate(size.center - path.getBounds().center)
-        return Outline.Generic(path)
-    }
-}
-
 @Composable
 private fun CookieReservoirLiquid(
-    fraction: Float,
-    color: androidx.compose.ui.graphics.Color,
-    shape: Shape
+    fractionProvider: () -> Float,
+    morph: Morph,
+    morphProgressProvider: () -> Float,
+    liquidColor: Color,
+    trackColor: Color
 ) {
-    Box(Modifier.size(RESERVOIR_SIZE).clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-        Canvas(Modifier.fillMaxSize()) {
-            val fillY = size.height * (1f - fraction)
-            val wave = Path().apply {
-                moveTo(0f, fillY)
-                cubicTo(size.width * .25f, fillY - 10.dp.toPx(), size.width * .35f, fillY + 10.dp.toPx(), size.width * .5f, fillY)
-                cubicTo(size.width * .68f, fillY - 8.dp.toPx(), size.width * .82f, fillY + 8.dp.toPx(), size.width, fillY)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                close()
+    Spacer(
+        Modifier
+            .size(RESERVOIR_SIZE)
+            .drawWithCache {
+                val morphPath = Path()
+                val wavePath = Path()
+                val unitToSize = Matrix()
+                val waveColor = liquidColor.copy(alpha = .28f)
+                val largeAmplitude = 10.dp.toPx()
+                val smallAmplitude = 8.dp.toPx()
+
+                onDrawBehind {
+                    morph.toPath(morphProgressProvider(), morphPath)
+                    unitToSize.reset()
+                    unitToSize.scale(x = size.width, y = size.height)
+                    morphPath.transform(unitToSize)
+                    morphPath.translate(size.center - morphPath.getBounds().center)
+
+                    val fillY = size.height * (1f - fractionProvider())
+                    wavePath.rewind()
+                    wavePath.moveTo(0f, fillY)
+                    wavePath.cubicTo(size.width * .25f, fillY - largeAmplitude, size.width * .35f, fillY + largeAmplitude, size.width * .5f, fillY)
+                    wavePath.cubicTo(size.width * .68f, fillY - smallAmplitude, size.width * .82f, fillY + smallAmplitude, size.width, fillY)
+                    wavePath.lineTo(size.width, size.height)
+                    wavePath.lineTo(0f, size.height)
+                    wavePath.close()
+
+                    clipPath(morphPath) {
+                        drawRect(trackColor)
+                        drawPath(wavePath, waveColor)
+                    }
+                }
             }
-            drawPath(wave, color.copy(alpha = .28f))
-        }
-    }
+    )
 }
 
 @Composable

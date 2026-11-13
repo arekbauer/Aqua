@@ -90,6 +90,11 @@ fun HistoryScreen(
         return
     }
 
+    // Cached so the sublist isn't reallocated on every recomposition of the lazy list content.
+    val visibleDays = remember(insights.days, visibleDaysCount) {
+        insights.days.take(visibleDaysCount)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -104,43 +109,43 @@ fun HistoryScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
         ) {
 
-            item {
+            item(key = "summary", contentType = "summary") {
                 SummarySection(insights, state.settings.liquidUnit)
                 Spacer(Modifier.height(24.dp))
             }
 
-            item {
+            item(key = "week_chart", contentType = "week_chart") {
                 Text("This week", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))
                 HistoryWeekChart(insights.week, insights.today, state.settings.liquidUnit)
                 Spacer(Modifier.height(8.dp))
             }
 
-            item {
+            item(key = "chart_legend", contentType = "chart_legend") {
                 HistoryChartLegend(modifier = Modifier.fillMaxWidth().padding(end = 12.dp))
             }
 
-            item {
+            item(key = "rhythm", contentType = "rhythm") {
                 Spacer(Modifier.height(24.dp))
                 SectionHeading("Your rhythm", "30-day patterns and this week’s longest gap")
                 Spacer(Modifier.height(12.dp))
                 PatternSection(insights.patterns)
             }
 
-            item {
+            item(key = "daily_log_header", contentType = "daily_log_header") {
                 Spacer(Modifier.height(24.dp))
                 SectionHeading("Daily log", "Your recorded totals")
                 Spacer(Modifier.height(12.dp))
             }
             if (insights.days.isEmpty()) {
-                item {
+                item(key = "empty", contentType = "empty") {
                     EmptyHistoryCard()
                 }
             } else {
-                val visibleDays = insights.days.take(visibleDaysCount)
                 items(
                     count = visibleDays.size,
-                    key = { index -> visibleDays[index].localDate }
+                    key = { index -> visibleDays[index].localDate },
+                    contentType = { "day" }
                 ) { index ->
                     val day = visibleDays[index]
                     HistoryDayRow(day, today = insights.today, unit = state.settings.liquidUnit)
@@ -148,7 +153,7 @@ fun HistoryScreen(
                 }
                 
                 if (visibleDaysCount < insights.days.size) {
-                    item {
+                    item(key = "show_older", contentType = "show_older") {
                         OutlinedButton(
                             onClick = { visibleDaysCount += 5 },
                             modifier = Modifier.fillMaxWidth().padding(8.dp).height(56.dp),

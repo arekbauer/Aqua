@@ -106,44 +106,48 @@ fun AquaRoot() {
         val snackbarHostState = remember { SnackbarHostState() }
         val selectedDestination = navigationState.topLevelRoute
         val layoutDirection = LocalLayoutDirection.current
-        val entryProvider = entryProvider<NavKey> {
-            entry<AquaDestination> { destination ->
-                when (destination) {
-                    AquaDestination.TODAY -> TodayRoute(
+        // Remembered so the provider (and the entry decoration keyed on it) isn't rebuilt on every
+        // recomposition of the root, e.g. when the theme or window size changes.
+        val entryProvider = remember(navigationState, snackbarHostState) {
+            entryProvider<NavKey> {
+                entry<AquaDestination> { destination ->
+                    when (destination) {
+                        AquaDestination.TODAY -> TodayRoute(
+                            modifier = Modifier,
+                            snackbarHostState = snackbarHostState
+                        )
+                        AquaDestination.HISTORY -> HistoryRoute(Modifier)
+                        AquaDestination.SETTINGS -> SettingsRoute(
+                            modifier = Modifier,
+                            navigateTo = navigationState::navigateTo
+                        )
+                    }
+                }
+                entry<com.arekb.aqua.ui.navigation.SettingsPreferences> {
+                    SettingsPreferencesRoute(
                         modifier = Modifier,
-                        snackbarHostState = snackbarHostState
-                    )
-                    AquaDestination.HISTORY -> HistoryRoute(Modifier)
-                    AquaDestination.SETTINGS -> SettingsRoute(
-                        modifier = Modifier,
-                        navigateTo = navigationState::navigateTo
+                        onBack = navigationState::goBack
                     )
                 }
-            }
-            entry<com.arekb.aqua.ui.navigation.SettingsPreferences> {
-                SettingsPreferencesRoute(
-                    modifier = Modifier,
-                    onBack = navigationState::goBack
-                )
-            }
-            entry<com.arekb.aqua.ui.navigation.SettingsAppearance> {
-                SettingsAppearanceRoute(
-                    modifier = Modifier,
-                    onBack = navigationState::goBack
-                )
-            }
-            entry<com.arekb.aqua.ui.navigation.SettingsDataManagement> {
-                SettingsDataManagementRoute(
-                    modifier = Modifier,
-                    snackbarHostState = snackbarHostState,
-                    onBack = navigationState::goBack
-                )
-            }
-            entry<com.arekb.aqua.ui.navigation.SettingsAbout> {
-                SettingsAboutRoute(
-                    modifier = Modifier,
-                    onBack = navigationState::goBack
-                )
+                entry<com.arekb.aqua.ui.navigation.SettingsAppearance> {
+                    SettingsAppearanceRoute(
+                        modifier = Modifier,
+                        onBack = navigationState::goBack
+                    )
+                }
+                entry<com.arekb.aqua.ui.navigation.SettingsDataManagement> {
+                    SettingsDataManagementRoute(
+                        modifier = Modifier,
+                        snackbarHostState = snackbarHostState,
+                        onBack = navigationState::goBack
+                    )
+                }
+                entry<com.arekb.aqua.ui.navigation.SettingsAbout> {
+                    SettingsAboutRoute(
+                        modifier = Modifier,
+                        onBack = navigationState::goBack
+                    )
+                }
             }
         }
         val entries = navigationState.toDecoratedEntries(entryProvider)
@@ -288,7 +292,8 @@ private fun TodayRoute(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(viewModel) { viewModel.refreshDate() }
+    // ON_RESUME is delivered to a newly added observer when the lifecycle is already resumed, so
+    // the observer above also covers the initial refresh without a separate LaunchedEffect.
     UserMessageEffect(state.message, snackbarHostState, viewModel::undo, viewModel::messageShown)
 
     TodayScreen(
@@ -312,7 +317,6 @@ private fun HistoryRoute(modifier: Modifier) {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(viewModel) { viewModel.refreshDate() }
     HistoryScreen(state, modifier)
 }
 

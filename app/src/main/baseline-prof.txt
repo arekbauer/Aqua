@@ -1,0 +1,8 @@
+# Baseline profile for Aqua. Packaged into the APK and compiled ahead-of-time by ART
+# (via androidx.profileinstaller) so the first launch does not pay JIT cost.
+#
+# This is a coarse, hand-written profile covering all app code. Replace it with a profile
+# generated from a Macrobenchmark BaselineProfileRule over the real user journeys
+# (cold start, Today, History, Settings) for a tighter, more effective result.
+HSPLcom/arekb/aqua/**;->**(**)**
+Lcom/arekb/aqua/**;
