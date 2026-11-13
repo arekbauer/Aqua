@@ -30,9 +30,25 @@ fun SettingsPreferencesScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    var unit by remember(settings.liquidUnit) { mutableStateOf(settings.liquidUnit) }
-    var goalValue by remember(unit) { mutableFloatStateOf(settings.dailyGoalMl.toUserUnit(unit).toFloat()) }
-    var presetTexts by remember(unit) { mutableStateOf(settings.presetsMl.map { it.toUserUnit(unit).toString() }) }
+    // Settings this screen has already pushed to storage. Their echoes coming back through
+    // `settings` must not overwrite what the user is currently typing.
+    val sentSettings = remember { mutableSetOf<HydrationSettings>() }
+
+    var unit by remember { mutableStateOf(settings.liquidUnit) }
+    var goalValue by remember { mutableFloatStateOf(settings.dailyGoalMl.toUserUnit(settings.liquidUnit).toFloat()) }
+    var presetTexts by remember {
+        mutableStateOf(settings.presetsMl.map { it.toUserUnit(settings.liquidUnit).toString() })
+    }
+
+    // Adopt settings that changed from outside this screen (e.g. the stored value finishing
+    // loading after the screen was first composed with defaults, or a data import).
+    LaunchedEffect(settings) {
+        if (settings !in sentSettings) {
+            unit = settings.liquidUnit
+            goalValue = settings.dailyGoalMl.toUserUnit(settings.liquidUnit).toFloat()
+            presetTexts = settings.presetsMl.map { it.toUserUnit(settings.liquidUnit).toString() }
+        }
+    }
 
     val goal = goalValue.toInt()
     val presets = presetTexts.mapNotNull(String::toIntOrNull)
@@ -61,6 +77,7 @@ fun SettingsPreferencesScreen(
                 liquidUnit = unit
             )
             if (updated != settings) {
+                sentSettings += updated
                 onSave(updated)
             }
         }
@@ -69,6 +86,8 @@ fun SettingsPreferencesScreen(
     fun handleUnitChange(newUnit: LiquidUnit) {
         if (newUnit != unit) {
             unit = newUnit
+            goalValue = settings.dailyGoalMl.toUserUnit(newUnit).toFloat()
+            presetTexts = settings.presetsMl.map { it.toUserUnit(newUnit).toString() }
         }
     }
 
