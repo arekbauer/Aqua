@@ -10,3 +10,11 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-dontwarn com.google.auto.value.AutoValue
+-dontwarn javax.lang.model.element.Modifier
+
+# Hilt testing
+-keep class dagger.hilt.android.testing.HiltTestApplication { *; }
+-keep class dagger.hilt.android.testing.** { *; }
+-keep class com.arekb.aqua.HiltTestRunner { *; }

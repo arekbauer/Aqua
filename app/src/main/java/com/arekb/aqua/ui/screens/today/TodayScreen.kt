@@ -28,6 +28,7 @@ import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,9 +63,9 @@ fun TodayScreen(
     onDelete: (WaterIntake) -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showDrinkPicker by remember { mutableStateOf(false) }
+    var showDrinkPicker by rememberSaveable { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<WaterIntake?>(null) }
-    var editAmount by remember { mutableStateOf("") }
+    var editAmount by rememberSaveable { mutableStateOf("") }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     Scaffold(
@@ -81,7 +82,7 @@ fun TodayScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
+            item(key = "gauge", contentType = "gauge") {
                 CookieReservoirProgressGauge(state.todayTotalMl, state.settings.dailyGoalMl, state.settings.liquidUnit)
                 Spacer(Modifier.height(12.dp))
                 DailyGoalSummary(
@@ -93,7 +94,7 @@ fun TodayScreen(
                 Spacer(Modifier.height(28.dp))
             }
 
-            item {
+            item(key = "quick_add", contentType = "quick_add") {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Quick add",
@@ -125,7 +126,7 @@ fun TodayScreen(
                 Spacer(Modifier.height(32.dp))
             }
 
-            item {
+            item(key = "logs_header", contentType = "logs_header") {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("Today’s logs", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.weight(1f))
@@ -135,11 +136,15 @@ fun TodayScreen(
             }
 
             if (state.entries.isEmpty()) {
-                item {
+                item(key = "empty", contentType = "empty") {
                     Text("Your drinks will appear here.", Modifier.fillMaxWidth().padding(vertical = 16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                items(items = state.entries, key = WaterIntake::id) { entry ->
+                items(
+                    items = state.entries,
+                    key = WaterIntake::id,
+                    contentType = { "intake_log" }
+                ) { entry ->
                     IntakeLogRow(
                         entry = entry,
                         unit = state.settings.liquidUnit,

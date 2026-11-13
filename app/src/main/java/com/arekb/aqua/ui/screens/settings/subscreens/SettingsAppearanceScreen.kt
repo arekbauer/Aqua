@@ -4,7 +4,8 @@ import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,85 +58,85 @@ fun SettingsAppearanceScreen(
             )
         },
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
+        // Two fixed cards: a plain scrollable Column avoids lazy-list overhead.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 92.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                SettingsCard(
-                    title = "Theme",
-                    subtitle = "Choose your preferred application theme"
-                ) {
-                    ThemePickerIconCards(
-                        selectedTheme = theme,
-                        onThemeSelected = ::handleThemeChange
-                    )
-                }
+            SettingsCard(
+                title = "Theme",
+                subtitle = "Choose your preferred application theme"
+            ) {
+                ThemePickerIconCards(
+                    selectedTheme = theme,
+                    onThemeSelected = ::handleThemeChange
+                )
             }
 
-            item {
-                val isDynamicColorSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                val isEnabled = isDynamicColorSupported && settings.isDynamicColorEnabled
+            val isDynamicColorSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            val isEnabled = isDynamicColorSupported && settings.isDynamicColorEnabled
 
-                SettingsCard(
-                    title = "Dynamic Color",
-                    subtitle = "Adapt app colors to match your device wallpaper"
+            SettingsCard(
+                title = "Dynamic Color",
+                subtitle = "Adapt app colors to match your device wallpaper"
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isEnabled)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isEnabled)
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    else
-                                        MaterialTheme.colorScheme.surfaceContainerHigh
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Palette,
-                                contentDescription = null,
-                                tint = if (isEnabled)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Use wallpaper colors",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                text = if (isDynamicColorSupported)
-                                    "Dynamic colors applied across the application"
-                                else
-                                    "Requires Android 12 (API 31) or higher",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Spacer(Modifier.width(12.dp))
-
-                        Switch(
-                            checked = isEnabled,
-                            onCheckedChange = { onSave(settings.copy(isDynamicColorEnabled = it)) },
-                            enabled = isDynamicColorSupported
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                            tint = if (isEnabled)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Use wallpaper colors",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = if (isDynamicColorSupported)
+                                "Dynamic colors applied across the application"
+                            else
+                                "Requires Android 12 (API 31) or higher",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Switch(
+                        checked = isEnabled,
+                        onCheckedChange = { onSave(settings.copy(isDynamicColorEnabled = it)) },
+                        enabled = isDynamicColorSupported
+                    )
                 }
             }
         }

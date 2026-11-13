@@ -4,7 +4,6 @@ import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.repository.HydrationRepository
 import java.time.Clock
-import java.time.LocalDate
 import java.time.ZoneId
 
 class AddWaterUseCase(
