@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Aqua"
 include(":app")
 include(":core:model")
+include(":wear")
