@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -83,5 +84,35 @@ class AquaDaoTest {
 
         assertEquals(listOf("2026-10-30", "2026-10-31"), entries.map(IntakeEntity::localDate))
         assertEquals(listOf(200, 100), entries.map(IntakeEntity::amountMl))
+    }
+
+    @Test
+    fun insertIfAbsentIgnoresRepeatedExternalIdsAndLeavesTotalsUnchanged() = runBlocking {
+        val first = dao.insertEntryIfAbsent(IntakeEntity(amountMl = 350, timestamp = 1_000, localDate = "2026-10-31", externalId = "event-1"))
+        val repeat = dao.insertEntryIfAbsent(IntakeEntity(amountMl = 350, timestamp = 1_000, localDate = "2026-10-31", externalId = "event-1"))
+
+        assertTrue(first > 0)
+        assertEquals(-1L, repeat)
+        assertEquals(350, dao.observeDailyTotals().first().single().totalMl)
+    }
+
+    @Test
+    fun localEntriesWithoutExternalIdNeverCollide() = runBlocking {
+        dao.insertEntry(IntakeEntity(amountMl = 200, timestamp = 1_000, localDate = "2026-10-31"))
+        dao.insertEntry(IntakeEntity(amountMl = 300, timestamp = 2_000, localDate = "2026-10-31"))
+
+        assertEquals(500, dao.observeDailyTotals().first().single().totalMl)
+    }
+
+    @Test
+    fun externalIdsSinceSkipsLocalAndOlderEntries() = runBlocking {
+        dao.insertEntry(IntakeEntity(amountMl = 100, timestamp = 1_000, localDate = "2026-10-31"))
+        dao.insertEntryIfAbsent(IntakeEntity(amountMl = 200, timestamp = 2_000, localDate = "2026-10-31", externalId = "new"))
+        dao.insertEntryIfAbsent(IntakeEntity(amountMl = 300, timestamp = 3_000, localDate = "2026-10-24", externalId = "boundary"))
+        dao.insertEntryIfAbsent(IntakeEntity(amountMl = 400, timestamp = 4_000, localDate = "2026-10-23", externalId = "old"))
+
+        val ids = dao.observeExternalIdsSince("2026-10-24").first()
+
+        assertEquals(setOf("new", "boundary"), ids.toSet())
     }
 }

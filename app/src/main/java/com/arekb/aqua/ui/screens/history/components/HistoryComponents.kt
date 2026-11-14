@@ -361,7 +361,8 @@ fun HistoryDayRow(day: HistoryDay, today: String, unit: LiquidUnit) {
     val colors = MaterialTheme.colorScheme
     val unitLabel = unit.label()
     val isToday = day.localDate == today
-    val isGoalMet = day.goalMl != null && day.totalMl >= day.goalMl
+    val goalMl = day.goalMl
+    val isGoalMet = goalMl != null && day.totalMl >= goalMl
     val status = when (HistoryInsightsCalculator.goalStatus(day, today)) {
         GoalStatus.IN_PROGRESS -> "In progress"
         GoalStatus.NO_LOGS -> "No logs"
@@ -394,9 +395,9 @@ fun HistoryDayRow(day: HistoryDay, today: String, unit: LiquidUnit) {
             Column(horizontalAlignment = Alignment.End) {
                 val dayTotal = day.totalMl.toUserUnit(unit)
                 Text("${formatMl(dayTotal)} $unitLabel", style = MaterialTheme.typography.titleMediumEmphasized, color = colors.primary)
-                if (day.goalMl != null && day.goalMl > 0) {
+                if (goalMl != null && goalMl > 0) {
                     Spacer(Modifier.height(6.dp))
-                    val progress = (day.totalMl.toFloat() / day.goalMl.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+                    val progress = (day.totalMl.toFloat() / goalMl.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.width(64.dp).height(6.dp).clip(CircleShape),

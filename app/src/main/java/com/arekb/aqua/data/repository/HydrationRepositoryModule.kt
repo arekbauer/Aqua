@@ -1,6 +1,7 @@
 package com.arekb.aqua.data.repository
 
 import com.arekb.aqua.domain.repository.HydrationRepository
+import com.arekb.aqua.domain.repository.WatchIntakeRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -13,4 +14,7 @@ abstract class HydrationRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindHydrationRepository(implementation: RoomHydrationRepository): HydrationRepository
+
+    @Binds
+    abstract fun bindWatchIntakeRepository(implementation: RoomHydrationRepository): WatchIntakeRepository
 }

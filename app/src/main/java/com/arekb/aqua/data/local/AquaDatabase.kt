@@ -3,6 +3,7 @@ package com.arekb.aqua.data.local
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
@@ -10,12 +11,17 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "intake_entries")
+@Entity(
+    tableName = "intake_entries",
+    // Unique so a re-delivered watch event can never create a second entry. NULLs (local entries) never collide.
+    indices = [Index(value = ["externalId"], unique = true)]
+)
 data class IntakeEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val amountMl: Int,
     val timestamp: Long,
-    val localDate: String
+    val localDate: String,
+    val externalId: String? = null
 )
 
 @Entity(tableName = "app_settings")
@@ -70,6 +76,13 @@ interface AquaDao {
 
     @Insert
     suspend fun insertEntry(entry: IntakeEntity): Long
+
+    /** Returns the new row id, or -1 when an entry with the same [IntakeEntity.externalId] already exists. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertEntryIfAbsent(entry: IntakeEntity): Long
+
+    @Query("SELECT externalId FROM intake_entries WHERE externalId IS NOT NULL AND localDate >= :startDate")
+    fun observeExternalIdsSince(startDate: String): Flow<List<String>>
 
     @Query("DELETE FROM intake_entries WHERE id = :id")
     suspend fun deleteEntry(id: Long)
@@ -129,7 +142,7 @@ interface AquaDao {
     }
 }
 
-@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 4, exportSchema = true)
+@Database(entities = [IntakeEntity::class, SettingsEntity::class, DailyGoalEntity::class], version = 5, exportSchema = true)
 abstract class AquaDatabase : RoomDatabase() {
     abstract fun aquaDao(): AquaDao
 }

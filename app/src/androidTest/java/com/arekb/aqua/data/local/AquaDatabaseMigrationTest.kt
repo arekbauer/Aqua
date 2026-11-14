@@ -1,10 +1,13 @@
 package com.arekb.aqua.data.local
 
 import androidx.room.testing.MigrationTestHelper
+import android.database.sqlite.SQLiteConstraintException
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,6 +66,47 @@ class AquaDatabaseMigrationTest {
             assertEquals(1, cursor.count)
             cursor.moveToFirst()
             assertEquals(1, cursor.getInt(0))
+        }
+        migrated.close()
+    }
+
+    @Test
+    fun migration4To5AddsNullableExternalIdAndKeepsExistingEntries() {
+        helper.createDatabase(TEST_DATABASE, 4).apply {
+            execSQL("INSERT INTO intake_entries (amountMl, timestamp, localDate) VALUES (450, 1793400000000, '2026-10-31')")
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DATABASE,
+            5,
+            true,
+            DatabaseMigrations.MIGRATION_4_5
+        )
+        migrated.query("SELECT amountMl, externalId FROM intake_entries").use { cursor ->
+            assertEquals(1, cursor.count)
+            cursor.moveToFirst()
+            assertEquals(450, cursor.getInt(0))
+            assertTrue(cursor.isNull(1))
+        }
+        migrated.close()
+    }
+
+    @Test
+    fun migration4To5EnforcesUniqueExternalIdsButAllowsManyNulls() {
+        helper.createDatabase(TEST_DATABASE, 4).close()
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DATABASE,
+            5,
+            true,
+            DatabaseMigrations.MIGRATION_4_5
+        )
+
+        migrated.execSQL("INSERT INTO intake_entries (amountMl, timestamp, localDate, externalId) VALUES (200, 1, '2026-10-31', NULL)")
+        migrated.execSQL("INSERT INTO intake_entries (amountMl, timestamp, localDate, externalId) VALUES (300, 2, '2026-10-31', NULL)")
+        migrated.execSQL("INSERT INTO intake_entries (amountMl, timestamp, localDate, externalId) VALUES (350, 3, '2026-10-31', 'event-1')")
+        assertThrows(SQLiteConstraintException::class.java) {
+            migrated.execSQL("INSERT INTO intake_entries (amountMl, timestamp, localDate, externalId) VALUES (350, 4, '2026-10-31', 'event-1')")
         }
         migrated.close()
     }

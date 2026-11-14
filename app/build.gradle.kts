@@ -21,8 +21,8 @@ android {
         applicationId = "com.arekb.aqua"
         minSdk = 27
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1"
 
         testInstrumentationRunner = "com.arekb.aqua.HiltTestRunner"
     }
@@ -67,6 +67,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:2.2.10"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -94,6 +95,8 @@ dependencies {
     add("ksp", libs.androidx.room.compiler)
     implementation(libs.hilt.android)
     add("ksp", libs.hilt.compiler)
+    implementation(libs.play.services.wearable)
+    implementation(libs.coroutines.play.services)
     androidTestImplementation(libs.hilt.android.testing)
     add("kspAndroidTest", libs.hilt.compiler)
     implementation(libs.aboutlibraries.core)

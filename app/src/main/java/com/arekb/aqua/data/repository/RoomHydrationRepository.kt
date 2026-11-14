@@ -11,13 +11,15 @@ import com.arekb.aqua.domain.model.HydrationSettings
 import com.arekb.aqua.domain.model.LiquidUnit
 import com.arekb.aqua.domain.model.WaterIntake
 import com.arekb.aqua.domain.repository.HydrationRepository
+import com.arekb.aqua.domain.repository.WatchIntakeRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import java.time.LocalDate
 
-class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : HydrationRepository {
+class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) :
+    HydrationRepository, WatchIntakeRepository {
     override fun observeSettings(): Flow<HydrationSettings?> = dao.observeSettings()
         .onStart { ensureDailyGoalForToday() }
         .map { it?.toDomain() }
@@ -48,6 +50,23 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         return WaterIntake(id, amountMl, timestampMillis, localDate)
     }
 
+    override suspend fun addIntakeFromWatch(
+        externalId: String,
+        amountMl: Int,
+        timestampMillis: Long,
+        localDate: String
+    ): Boolean = dao.insertEntryIfAbsent(
+        IntakeEntity(
+            amountMl = amountMl,
+            timestamp = timestampMillis,
+            localDate = localDate,
+            externalId = externalId
+        )
+    ) != IGNORED_INSERT
+
+    override fun observeWatchEventIdsSince(startLocalDate: String): Flow<List<String>> =
+        dao.observeExternalIdsSince(startLocalDate)
+
     override suspend fun undoIntake(intake: WaterIntake) = dao.deleteEntry(intake.id)
 
     override suspend fun updateIntakeAmount(intakeId: Long, amountMl: Int) =
@@ -77,7 +96,7 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
     ) {
         val settingsEntity = settings?.toEntity()
         val goalEntities = dailyGoals.map { DailyGoalEntity(it.effectiveLocalDate, it.goalMl) }
-        val intakeEntities = entries.map { IntakeEntity(id = it.id, amountMl = it.amountMl, timestamp = it.timestampMillis, localDate = it.localDate) }
+        val intakeEntities = entries.map { IntakeEntity(id = it.id, amountMl = it.amountMl, timestamp = it.timestampMillis, localDate = it.localDate, externalId = it.externalId) }
         dao.restoreAllData(settingsEntity, goalEntities, intakeEntities)
         ensureDailyGoalForToday()
     }
@@ -102,7 +121,12 @@ class RoomHydrationRepository @Inject constructor(private val dao: AquaDao) : Hy
         isDynamicColorEnabled = isDynamicColorEnabled
     )
 
-    private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate)
+    private fun IntakeEntity.toDomain() = WaterIntake(id, amountMl, timestamp, localDate, externalId)
+
+    private companion object {
+        /** Room's return value for an `@Insert(onConflict = IGNORE)` that was skipped. */
+        const val IGNORED_INSERT = -1L
+    }
 
     private suspend fun ensureDailyGoalForToday() {
         dao.insertDefaults(SettingsEntity())

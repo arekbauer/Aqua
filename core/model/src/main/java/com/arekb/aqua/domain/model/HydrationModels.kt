@@ -4,7 +4,9 @@ data class WaterIntake(
     val id: Long,
     val amountMl: Int,
     val timestampMillis: Long,
-    val localDate: String
+    val localDate: String,
+    /** Idempotency key for entries recorded on another device (e.g. the watch); null for local entries. */
+    val externalId: String? = null
 )
 
 enum class LiquidUnit { ML, OZ }

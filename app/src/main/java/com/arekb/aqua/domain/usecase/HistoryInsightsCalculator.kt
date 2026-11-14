@@ -3,10 +3,10 @@ package com.arekb.aqua.domain.usecase
 import com.arekb.aqua.domain.model.DailyGoal
 import com.arekb.aqua.domain.model.DailyTotal
 import com.arekb.aqua.domain.model.DayPeriod
+import com.arekb.aqua.domain.model.GoalStatus
 import com.arekb.aqua.domain.model.HistoryDay
 import com.arekb.aqua.domain.model.HistoryInsights
 import com.arekb.aqua.domain.model.HistoryPatternInsights
-import com.arekb.aqua.domain.model.GoalStatus
 import com.arekb.aqua.domain.model.WaterIntake
 import java.time.Duration
 import java.time.Instant
@@ -19,12 +19,16 @@ object HistoryInsightsCalculator {
     private const val PATTERN_DAYS = 30L
     private const val MIN_PATTERN_LOGGED_DAYS = 7
 
-    fun goalStatus(day: HistoryDay, today: String): GoalStatus = when {
-        day.localDate == today -> GoalStatus.IN_PROGRESS
-        !day.hasLogs -> GoalStatus.NO_LOGS
-        day.goalMl == null -> GoalStatus.GOAL_UNAVAILABLE
-        day.totalMl >= day.goalMl -> GoalStatus.GOAL_MET
-        else -> GoalStatus.BELOW_GOAL
+    fun goalStatus(day: HistoryDay, today: String): GoalStatus {
+        // Local copy: HistoryDay now lives in :core:model, so its property can't be smart-cast.
+        val goalMl = day.goalMl
+        return when {
+            day.localDate == today -> GoalStatus.IN_PROGRESS
+            !day.hasLogs -> GoalStatus.NO_LOGS
+            goalMl == null -> GoalStatus.GOAL_UNAVAILABLE
+            day.totalMl >= goalMl -> GoalStatus.GOAL_MET
+            else -> GoalStatus.BELOW_GOAL
+        }
     }
 
     fun calculate(
@@ -61,7 +65,7 @@ object HistoryInsightsCalculator {
             )
         }
         val goalAvailableDays = completedHistory.count { it.goalMl != null }
-        val goalMetDays = completedHistory.count { day -> day.goalMl != null && day.totalMl >= day.goalMl }
+        val goalMetDays = completedHistory.count { day -> day.goalMl?.let { goal -> day.totalMl >= goal } == true }
         val average = if (completedHistory.isNotEmpty()) {
             completedHistory.sumOf(HistoryDay::totalMl) / completedHistory.size
         } else {

@@ -31,7 +31,8 @@ data class BackupWaterIntake(
     val id: Long = 0,
     val amountMl: Int,
     val timestampMillis: Long,
-    val localDate: String
+    val localDate: String,
+    val externalId: String? = null
 )
 
 fun HydrationSettings.toBackup() = BackupSettings(
@@ -64,12 +65,15 @@ fun WaterIntake.toBackup() = BackupWaterIntake(
     id = id,
     amountMl = amountMl,
     timestampMillis = timestampMillis,
-    localDate = localDate
+    localDate = localDate,
+    externalId = externalId
 )
 
 fun BackupWaterIntake.toDomain() = WaterIntake(
     id = id,
     amountMl = amountMl,
     timestampMillis = timestampMillis,
-    localDate = localDate
+    localDate = localDate,
+    // A blank id would collide on the unique index, so treat it as "no external id".
+    externalId = externalId?.takeIf { it.isNotBlank() }
 )

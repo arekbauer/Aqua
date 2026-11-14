@@ -5,12 +5,15 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.arekb.aqua.data.local.AquaDatabase
 import com.arekb.aqua.domain.model.HydrationSettings
+import com.arekb.aqua.domain.model.WaterIntake
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,5 +71,26 @@ class RoomHydrationRepositoryTest {
         val todayGoal = goals.find { it.effectiveLocalDate == today }
         assertNotNull(todayGoal)
         assertEquals(3000, todayGoal?.goalMl)
+    }
+
+    @Test
+    fun watchIntakeIsStoredOnceAndAcknowledged() = runTest {
+        assertTrue(repository.addIntakeFromWatch("event-1", 350, 1_000, "2026-10-31"))
+        assertFalse(repository.addIntakeFromWatch("event-1", 350, 1_000, "2026-10-31"))
+
+        assertEquals(listOf(350), repository.observeEntriesForDate("2026-10-31").first().map { it.amountMl })
+        assertEquals(listOf("event-1"), repository.observeWatchEventIdsSince("2026-10-31").first())
+    }
+
+    @Test
+    fun restoringABackupKeepsExternalIdsSoReplayedEventsStayDeduplicated() = runTest {
+        repository.restoreData(
+            settings = null,
+            dailyGoals = emptyList(),
+            entries = listOf(WaterIntake(1, 250, 1_000, "2026-10-31", externalId = "event-1"))
+        )
+
+        assertEquals("event-1", repository.getAllEntries().single().externalId)
+        assertFalse(repository.addIntakeFromWatch("event-1", 250, 1_000, "2026-10-31"))
     }
 }

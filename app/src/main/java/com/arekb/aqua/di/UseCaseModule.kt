@@ -1,7 +1,10 @@
 package com.arekb.aqua.di
 
 import com.arekb.aqua.domain.repository.HydrationRepository
+import com.arekb.aqua.domain.repository.WatchIntakeRepository
 import com.arekb.aqua.domain.usecase.AddWaterUseCase
+import com.arekb.aqua.domain.usecase.ObserveWatchStateUseCase
+import com.arekb.aqua.domain.usecase.RecordWatchIntakeUseCase
 import com.arekb.aqua.domain.usecase.ResetDailyIntakeUseCase
 import com.arekb.aqua.domain.usecase.SaveHydrationSettingsUseCase
 import dagger.Module
@@ -33,6 +36,17 @@ object UseCaseModule {
     @Provides
     fun provideClearAllHistoryUseCase(repository: HydrationRepository) =
         com.arekb.aqua.domain.usecase.ClearAllHistoryUseCase(repository)
+
+    @Provides
+    fun provideRecordWatchIntakeUseCase(repository: WatchIntakeRepository, clock: Clock) =
+        RecordWatchIntakeUseCase(repository, clock)
+
+    @Provides
+    fun provideObserveWatchStateUseCase(
+        repository: HydrationRepository,
+        watchRepository: WatchIntakeRepository,
+        clock: Clock
+    ) = ObserveWatchStateUseCase(repository, watchRepository, clock)
 
     @Provides
     fun provideExportDataUseCase(repository: HydrationRepository) =

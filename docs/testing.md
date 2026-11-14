@@ -2,7 +2,7 @@
 
 ## Current setup
 
-Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, and Hilt. Before this setup it had no test classes or CI workflow. Tests use JUnit 4. Compose behavior and Room/SQLite tests run as instrumented tests on an Android emulator. ViewModel tests run locally on the JVM with coroutine test dispatchers and a fake repository.
+Aqua is an Android app (`:app`, plus the shared `:core:model` library) built with Kotlin, Jetpack Compose, Room, and Hilt. Before this setup it had no test classes or CI workflow. Tests use JUnit 4. Compose behavior and Room/SQLite tests run as instrumented tests on an Android emulator. ViewModel tests run locally on the JVM with coroutine test dispatchers and a fake repository.
 
 ## Coverage added
 
@@ -43,7 +43,23 @@ Aqua is a single-module Android app built with Kotlin, Jetpack Compose, Room, an
   - Verifies UI rendering of backup/restore and danger zone sections, and clicking export, import, wipe, and back buttons.
 - `SettingsAboutScreenTest`
   - Verifies UI rendering of app info, developer details, open-source license info, and opening the licenses bottom sheet.
-- JaCoCo report for local JVM tests.
+- `HydrationModelsTest` (`:core:model`)
+  - Verifies ml/oz conversion rounding in both directions, unit labels, and that default settings expose exactly three presets.
+- `WearSyncCodecTest` (`:core:model`)
+  - Verifies `IntakeEvent` / `WatchState` JSON round trips, the short `v` version key, tolerance of unknown keys, null results for malformed payloads, and path helpers.
+- `RecordWatchIntakeUseCaseTest`
+  - Verifies a valid watch event is stored once, re-delivery is reported as a duplicate, and invalid ids, amounts, dates, timestamps and date/timestamp mismatches are rejected without reaching the repository; also covers decoding from raw payloads.
+- `ObserveWatchStateUseCaseTest`
+  - Verifies snapshot contents (today's total, goal, presets, unit), defaults before settings exist, the 7-day acknowledgement window, re-emission on changes, no duplicate emissions, and midnight roll-over using virtual time.
+- `WatchStatePublisherTest`
+  - Verifies the initial snapshot and each change are published, a failing publish does not stop later updates, and acknowledgements are published.
+- `BackupExternalIdTest`
+  - Verifies `externalId` survives backup mapping, blank ids are treated as missing, and pre-sync backups still decode.
+- `AquaDatabaseMigrationTest` (v4 → v5)
+  - Verifies existing entries are kept with a null `externalId`, duplicate external ids violate the unique index, and multiple null ids are allowed.
+- `AquaDaoTest` / `RoomHydrationRepositoryTest` (watch sync)
+  - Verify `insertEntryIfAbsent` ignores repeated external ids without changing totals, local entries never collide, `observeExternalIdsSince` skips local and older entries, and restoring a backup keeps external ids so replayed events stay de-duplicated.
+- JaCoCo report for local JVM tests (covers `:app` classes only).
 
 The current suite does not include screenshot baselines. The instrumented tests exercise screen components, Room DAO behavior, database migrations, and Hilt-backed end-to-end user flows.
 
